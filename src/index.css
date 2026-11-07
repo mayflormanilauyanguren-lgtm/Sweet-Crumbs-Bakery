@@ -1,0 +1,111 @@
+@import "tailwindcss";
+
+:root {
+  --canvas: #FAF6F0;
+  --surface: #FFFFFF;
+  --surface-warm: #FFFDF9;
+  --surface-cream: #F5EFE6;
+  --border-subtle: #EFE6D8;
+  --border-strong: #DECDBA;
+  
+  --espresso: #20120D;
+  --espresso-deep: #160B07;
+  --chocolate: #3E2115;
+  --caramel: #B87326;
+  --caramel-light: #D98C36;
+  --caramel-glow: #F3B562;
+  --berry: #A8181E;
+  --berry-hover: #8C1217;
+  
+  --text-main: #24140D;
+  --text-muted: #6E574C;
+  --text-light: #9B8477;
+  
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-body: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  color: var(--text-main);
+  background-color: var(--canvas);
+  background-image: 
+    radial-gradient(rgba(62, 33, 21, 0.032) 0.8px, transparent 0.8px),
+    linear-gradient(to bottom, #FFFDFB 0%, #FAF6F0 400px);
+  background-size: 24px 24px, 100% 100%;
+  background-repeat: repeat, no-repeat;
+  line-height: 1.6;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+@layer base {
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    color: var(--espresso);
+    letter-spacing: -0.018em;
+  }
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+.font-body {
+  font-family: var(--font-body);
+}
+
+/* Arch mask for editorial bakery imagery */
+.arch-mask {
+  border-top-left-radius: 180px;
+  border-top-right-radius: 180px;
+}
+
+.arch-mask-lg {
+  border-top-left-radius: 260px;
+  border-top-right-radius: 260px;
+}
+
+/* Page fade transition */
+@keyframes pageFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.page-animate {
+  animation: pageFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Tactile micro-transitions */
+.transition-tactile {
+  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Scrollbar polish */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #FAF6F0;
+}
+::-webkit-scrollbar-thumb {
+  background: #DECDBA;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #B87326;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-animate {
+    animation: none;
+  }
+}

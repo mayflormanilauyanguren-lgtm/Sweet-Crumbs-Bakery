@@ -1,0 +1,2830 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sweet Crumbs Bakery | Freshly Baked, Just for You</title>
+<meta name="description" content="Sweet Crumbs Bakery - fresh cakes, cupcakes, cookies, bread and pastries, baked daily in Davao City.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+/* =========================================================
+   SWEET CRUMBS BAKERY — STYLESHEET
+  Palette: Pastry cream | Berry | Cocoa | Pistachio | Caramel
+   ========================================================= */
+
+:root {
+  /* "Strawberry, caramel & chocolate" — warm, appetite-stimulating colours */
+  --cream: #fff2dc;          /* custard cream (page background) */
+  --berry: #d3213a;          /* ripe strawberry (main buttons, highlights) */
+  --berry-dark: #a8142b;     /* strawberry jam (hover) */
+  --brown: #6a3220;          /* milk chocolate */
+  --brown-dark: #34170e;     /* dark chocolate (headings, footer) */
+  --gold: #e5972a;           /* golden caramel (stars, promo box) */
+  --caramel-deep: #a85a10;   /* toasted caramel (small accent text) */
+  --white: #fffaf0;          /* vanilla */
+  --text: #3a211a;
+  --text-light: #7a5a4e;
+  --shadow: 0 16px 38px rgba(74, 39, 28, 0.15);
+  --shadow-soft: 0 6px 20px rgba(74, 39, 28, 0.09);
+  --radius: 8px;
+  --radius-sm: 6px;
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-body: 'Poppins', 'Segoe UI', sans-serif;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  color: var(--text);
+  background-color: var(--cream);
+  background-image: radial-gradient(rgba(99, 54, 41, 0.045) 0.7px, transparent 0.7px);
+  background-size: 18px 18px;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+img { max-width: 100%; display: block; }
+
+a { color: inherit; text-decoration: none; }
+
+h1, h2, h3 {
+  font-family: var(--font-display);
+  color: var(--brown-dark);
+  margin: 0 0 0.5em;
+  line-height: 1.2;
+}
+
+p { margin: 0 0 1em; color: var(--text-light); }
+
+button { font-family: var(--font-body); cursor: pointer; }
+
+.visually-hidden {
+  position: absolute;
+  width: 1px; height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.skip-link {
+  position: absolute;
+  top: -50px;
+  left: 10px;
+  background: var(--brown);
+  color: var(--white);
+  padding: 10px 16px;
+  border-radius: var(--radius-sm);
+  z-index: 2000;
+  transition: top 0.2s ease;
+}
+.skip-link:focus { top: 10px; }
+
+:focus-visible {
+  outline: 3px solid var(--brown);
+  outline-offset: 2px;
+}
+
+/* =============== BUTTONS =============== */
+.btn {
+  display: inline-block;
+  padding: 14px 30px;
+  border-radius: 50px;
+  border: 2px solid transparent;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  text-align: center;
+}
+.btn:hover { transform: translateY(-3px); }
+
+.btn-primary {
+  background: var(--berry);
+  color: var(--white);
+  box-shadow: var(--shadow-soft);
+}
+.btn-primary:hover { background: var(--berry-dark); box-shadow: var(--shadow); }
+
+.btn-outline {
+  background: transparent;
+  border-color: var(--brown);
+  color: var(--brown);
+}
+.btn-outline:hover { background: var(--brown); color: var(--white); }
+
+.btn-block { width: 100%; }
+
+.link-btn {
+  background: none;
+  border: none;
+  color: var(--berry-dark);
+  font-weight: 600;
+  padding: 0;
+  text-decoration: underline;
+}
+
+/* =============== PAGE SYSTEM (book-style navigation) =============== */
+.page {
+  display: none;
+}
+.page.active {
+  display: block;
+  animation: pageTurn 0.5s ease;
+  transform-origin: left center;
+}
+@keyframes pageTurn {
+  from {
+    opacity: 0;
+    transform: perspective(1400px) rotateY(6deg) translateX(14px);
+  }
+  to {
+    opacity: 1;
+    transform: perspective(1400px) rotateY(0deg) translateX(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .page.active { animation: none; }
+}
+
+.nav-link.active {
+  color: var(--berry-dark);
+}
+.nav-link.active::after { width: 100%; }
+
+/* =============== CATEGORY SHOWCASE (Categories page) =============== */
+.category-showcase {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 26px;
+}
+.category-card {
+  background: var(--white);
+  border: none;
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-soft);
+  text-align: left;
+  padding: 0;
+  cursor: pointer;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  display: flex;
+  flex-direction: column;
+}
+.category-card:hover { transform: translateY(-6px); box-shadow: var(--shadow); }
+.category-card img { width: 100%; height: 170px; object-fit: cover; }
+.category-card-body { padding: 20px 22px 24px; }
+.category-card-body h3 { font-size: 1.2rem; margin-bottom: 8px; }
+.category-card-body p { font-size: 0.88rem; margin-bottom: 14px; }
+.category-link { font-weight: 600; color: var(--berry-dark); font-size: 0.88rem; }
+
+/* =============== HEADER / NAV =============== */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 900;
+  background: rgba(255, 253, 248, 0.96);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 2px 12px rgba(107, 66, 38, 0.08);
+}
+
+.navbar {
+  max-width: 1300px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 24px;
+}
+
+.logo {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--brown-dark);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.logo-icon { font-size: 1.6rem; }
+
+.nav-links {
+  list-style: none;
+  display: flex;
+  gap: 28px;
+  margin: 0;
+  padding: 0;
+}
+
+.nav-link {
+  font-weight: 500;
+  font-size: 0.95rem;
+  color: var(--text);
+  position: relative;
+  padding-bottom: 4px;
+}
+.nav-link::after {
+  content: "";
+  position: absolute;
+  left: 0; bottom: 0;
+  width: 0; height: 2px;
+  background: var(--berry);
+  transition: width 0.25s ease;
+}
+.nav-link:hover::after { width: 100%; }
+
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.icon-btn {
+  position: relative;
+  background: var(--white);
+  border: none;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-soft);
+  transition: transform 0.2s ease;
+}
+.icon-btn:hover { transform: scale(1.08); }
+
+.badge {
+  position: absolute;
+  top: -4px; right: -4px;
+  background: var(--brown);
+  color: var(--white);
+  font-size: 0.65rem;
+  font-weight: 700;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 3px;
+}
+
+.hamburger { display: none; flex-direction: column; gap: 4px; }
+.hamburger span {
+  width: 20px; height: 2px;
+  background: var(--brown-dark);
+  border-radius: 2px;
+  transition: 0.3s ease;
+}
+.hamburger.open span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+.hamburger.open span:nth-child(2) { opacity: 0; }
+.hamburger.open span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+
+/* =============== HERO =============== */
+.hero {
+  max-width: 1300px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 40px;
+  padding: 76px 24px;
+  position: relative;
+  isolation: isolate;
+}
+.hero::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 18px 0;
+  background: linear-gradient(112deg, #ffddaa 0%, #fff2dc 50%, #ffd3cb 100%);
+  border-radius: var(--radius);
+}
+.hero-content { flex: 1; min-width: 300px; }
+.hero-image { flex: 1; min-width: 280px; }
+.hero-image img {
+  width: 100%;
+  height: 390px;
+  object-fit: cover;
+  border: 7px solid var(--white);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.hero-eyebrow {
+  color: var(--caramel-deep);
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: uppercase;
+  font-size: 0.78rem;
+  margin-bottom: 6px;
+}
+
+.hero-title {
+  font-size: clamp(2.2rem, 5vw, 3.4rem);
+  margin-bottom: 20px;
+}
+
+.hero-desc {
+  font-size: 1.05rem;
+  max-width: 460px;
+  margin-bottom: 30px;
+}
+
+.hero-buttons { display: flex; gap: 16px; flex-wrap: wrap; }
+
+/* =============== SECTIONS =============== */
+.section {
+  max-width: 1300px;
+  margin: 0 auto;
+  padding: 60px 24px;
+}
+.section.alt-bg { background: var(--white); max-width: 100%; }
+.section.alt-bg > * { max-width: 1300px; margin-left: auto; margin-right: auto; }
+
+.section-header { text-align: center; max-width: 600px; margin: 0 auto 40px; }
+.section-header h2 { font-size: clamp(1.8rem, 3.5vw, 2.4rem); }
+
+/* =============== PRODUCT GRID / CARD =============== */
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 26px;
+}
+
+.product-card {
+  background: var(--white);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-soft);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+.product-card:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow);
+}
+
+.product-img-wrap { position: relative; overflow: hidden; height: 220px; }
+.product-img-wrap img {
+  width: 100%; height: 100%; object-fit: cover;
+  transition: transform 0.4s ease;
+}
+.product-card:hover .product-img-wrap img { transform: scale(1.08); }
+
+.wishlist-toggle {
+  position: absolute;
+  top: 10px; right: 10px;
+  background: rgba(255,255,255,0.9);
+  border: none;
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  font-size: 1.1rem;
+  color: var(--berry-dark);
+  display: flex; align-items: center; justify-content: center;
+  transition: transform 0.2s ease;
+}
+.wishlist-toggle:hover { transform: scale(1.15); }
+.wishlist-toggle.active { background: var(--berry); color: var(--white); }
+
+.product-body { padding: 18px 18px 20px; display: flex; flex-direction: column; flex: 1; }
+.product-category {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--caramel-deep);
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.product-name { font-family: var(--font-display); font-size: 1.15rem; margin-bottom: 4px; color: var(--brown-dark); }
+.product-desc { font-size: 0.85rem; margin-bottom: 10px; flex: 1; }
+.product-rating { font-size: 0.85rem; color: var(--gold); margin-bottom: 10px; }
+.product-rating span.count { color: var(--text-light); margin-left: 4px; }
+
+.product-footer { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.product-price { font-weight: 700; font-size: 1.15rem; color: var(--brown); }
+
+.add-cart-btn {
+  background: var(--brown);
+  color: var(--white);
+  border: none;
+  padding: 10px 18px;
+  border-radius: 50px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+.add-cart-btn:hover { background: var(--brown-dark); transform: translateY(-2px); }
+
+/* =============== SPECIAL SECTION =============== */
+.special-section { padding-top: 0; }
+.special-card {
+  background: linear-gradient(112deg, #a3182e 0%, #5e2415 58%, #34170e 100%);
+  color: var(--white);
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  gap: 30px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+.special-text { flex: 1; padding: 40px; min-width: 260px; }
+.special-card h2, .special-card p { color: var(--white); }
+.special-card .hero-eyebrow { color: var(--gold); }
+.special-card .btn-primary { background: var(--gold); color: var(--brown-dark); }
+.special-card .btn-primary:hover { background: #f2ab48; color: var(--brown-dark); }
+.special-card img { flex: 1; max-height: 320px; object-fit: cover; min-width: 260px; }
+
+/* =============== SHOP TOOLBAR / FILTERS =============== */
+.shop-toolbar {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+.search-wrap { flex: 2; min-width: 220px; }
+.sort-wrap { flex: 1; min-width: 180px; }
+
+#search-input, #sort-select, #promo-code {
+  width: 100%;
+  padding: 13px 18px;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid #e6d5bd;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  background: var(--white);
+}
+#search-input:focus, #sort-select:focus { border-color: var(--berry); }
+
+.category-filters {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+.filter-btn {
+  background: var(--white);
+  border: 1.5px solid #e6d5bd;
+  padding: 9px 20px;
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+  font-size: 0.88rem;
+  color: var(--text);
+  transition: all 0.2s ease;
+}
+.filter-btn:hover { border-color: var(--berry); }
+.filter-btn.active { background: var(--berry); border-color: var(--berry); color: var(--white); }
+
+.results-info { font-size: 0.85rem; margin-bottom: 16px; }
+
+/* =============== CUSTOM CAKE BUILDER =============== */
+.cake-builder {
+  display: flex;
+  gap: 40px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+.cake-preview { flex: 1; min-width: 280px; position: sticky; top: 100px; }
+.cake-preview img { border-radius: var(--radius); box-shadow: var(--shadow); width: 100%; height: 320px; object-fit: cover; }
+.cake-reference-preview { display: block; width: 100%; max-height: 260px; object-fit: contain; margin-top: 16px; border-radius: var(--radius-sm); background: var(--cream); }
+.cake-price-tag {
+  background: var(--white);
+  border-radius: var(--radius-sm);
+  padding: 16px 20px;
+  margin-top: -30px;
+  margin-left: 20px;
+  width: fit-content;
+  box-shadow: var(--shadow);
+  position: relative;
+}
+.cake-price-tag span { display: block; font-size: 0.8rem; color: var(--text-light); }
+.cake-price-tag strong { font-size: 1.6rem; color: var(--brown); }
+
+.cake-form { flex: 1.3; min-width: 300px; background: var(--white); border-radius: var(--radius); padding: 30px; box-shadow: var(--shadow-soft); }
+.cake-form fieldset { border: none; padding: 0; margin: 0 0 20px; }
+.cake-form legend { font-weight: 600; color: var(--brown-dark); margin-bottom: 10px; font-family: var(--font-display); font-size: 1.05rem; }
+
+.option-group { display: flex; flex-wrap: wrap; gap: 10px; }
+.payment-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-bottom: 14px; }
+.payment-options label { border-radius: var(--radius-sm); padding: 12px 14px; align-items: flex-start; }
+.payment-options input[type="radio"] { margin: 3px 0 0; flex: none; }
+.pay-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.pay-text strong { font-weight: 600; line-height: 1.25; }
+.pay-text small { font-size: 0.74rem; line-height: 1.3; opacity: 0.82; }
+.option-group label {
+  border: 1.5px solid #eaddc8;
+  padding: 9px 16px;
+  border-radius: 50px;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.option-group label:has(input:checked) { background: var(--berry); border-color: var(--berry); color: var(--white); }
+.option-group input[type="radio"] { accent-color: var(--brown); }
+
+.form-row { margin-bottom: 18px; }
+.form-row label { display: block; font-weight: 500; margin-bottom: 6px; font-size: 0.9rem; }
+.form-row input[type="text"],
+.form-row input[type="email"],
+.form-row input[type="tel"],
+.form-row input[type="password"],
+.form-row textarea,
+.form-row select {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid #eaddc8;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  background: var(--white);
+}
+.form-row input:focus, .form-row textarea:focus, .form-row select:focus { border-color: var(--berry); }
+
+.error-msg { color: #c0392b; font-size: 0.78rem; display: block; margin-top: 4px; min-height: 14px; }
+
+.qty-control { display: flex; align-items: center; gap: 12px; }
+.qty-control button {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  border: 1.5px solid var(--brown);
+  background: var(--white);
+  color: var(--brown);
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+.qty-control button:hover { background: var(--brown); color: var(--white); }
+.qty-control input {
+  width: 50px;
+  text-align: center;
+  border: none;
+  background: transparent;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+/* =============== PROMOTIONS =============== */
+.promo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 24px;
+  margin-bottom: 40px;
+}
+.promo-card {
+  background: var(--white);
+  border-radius: var(--radius);
+  padding: 30px 24px;
+  text-align: center;
+  box-shadow: var(--shadow-soft);
+  transition: transform 0.25s ease;
+}
+.promo-card:hover { transform: translateY(-6px); }
+.promo-icon { font-size: 2.2rem; display: block; margin-bottom: 14px; }
+.promo-card h3 { font-size: 1.1rem; }
+
+.discount-box {
+  background: var(--gold);
+  border-radius: var(--radius);
+  padding: 36px;
+  text-align: center;
+  max-width: 600px;
+  margin: 0 auto;
+}
+.discount-box h3, .discount-box p { color: var(--brown-dark); }
+.discount-box p { color: var(--brown-dark); }
+.discount-input-row { display: flex; gap: 10px; max-width: 400px; margin: 0 auto; flex-wrap: wrap; }
+.discount-input-row input { flex: 1; min-width: 180px; }
+.promo-message { font-weight: 600; margin-top: 12px; min-height: 20px; color: var(--brown-dark); }
+
+/* =============== REVIEWS =============== */
+.reviews-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 24px;
+  margin-bottom: 50px;
+}
+.review-card {
+  background: var(--cream);
+  border-radius: var(--radius);
+  padding: 26px;
+  box-shadow: var(--shadow-soft);
+}
+.review-stars { color: var(--gold); margin-bottom: 10px; letter-spacing: 2px; }
+.review-name { font-weight: 600; color: var(--brown-dark); margin-top: 12px; }
+
+.review-form-wrap { max-width: 500px; margin: 0 auto; }
+.review-form-wrap h3 { text-align: center; }
+
+/* =============== ABOUT =============== */
+.about-wrap {
+  display: flex;
+  align-items: center;
+  gap: 40px;
+  flex-wrap: wrap;
+}
+.about-wrap img { flex: 1; min-width: 280px; border-radius: var(--radius); box-shadow: var(--shadow); height: 380px; object-fit: cover; }
+.about-text { flex: 1; min-width: 280px; }
+.about-list { list-style: none; padding: 0; margin: 0; }
+.about-list li { margin-bottom: 12px; padding-left: 22px; position: relative; color: var(--text-light); }
+.about-list li::before { content: "🍰"; position: absolute; left: 0; top: 0; font-size: 0.9rem; }
+
+/* =============== CONTACT =============== */
+.contact-wrap {
+  display: flex;
+  gap: 40px;
+  flex-wrap: wrap;
+}
+.contact-info { flex: 1; min-width: 260px; background: var(--cream); padding: 30px; border-radius: var(--radius); }
+.contact-info p { color: var(--text); }
+.contact-form { flex: 1.4; min-width: 280px; }
+
+/* =============== FOOTER =============== */
+.site-footer {
+  background: var(--brown-dark);
+  color: #ffe9c7;
+  text-align: center;
+  padding: 30px 24px;
+}
+.site-footer p { color: #ffe9c7; margin: 4px 0; font-size: 0.88rem; }
+
+/* =============== TOASTS =============== */
+#toast-container {
+  position: fixed;
+  top: 90px; right: 20px;
+  z-index: 3000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.toast {
+  background: var(--brown);
+  color: var(--white);
+  padding: 14px 22px;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow);
+  font-size: 0.9rem;
+  font-weight: 500;
+  animation: toastIn 0.3s ease, toastOut 0.3s ease 2.7s forwards;
+  max-width: 300px;
+}
+@keyframes toastIn { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+@keyframes toastOut { to { transform: translateX(120%); opacity: 0; } }
+
+/* =============== OVERLAY / SIDE PANEL =============== */
+.overlay {
+  position: fixed; inset: 0;
+  background: rgba(51, 33, 20, 0.45);
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease;
+}
+.overlay.show { opacity: 1; visibility: visible; }
+
+.side-panel {
+  position: fixed;
+  top: 0; right: -420px;
+  width: 400px;
+  max-width: 92vw;
+  height: 100%;
+  background: var(--white);
+  z-index: 1100;
+  box-shadow: -10px 0 30px rgba(0,0,0,0.15);
+  transition: right 0.35s ease;
+  display: flex;
+  flex-direction: column;
+}
+.side-panel.show { right: 0; }
+
+.side-panel-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid #f0e5d5;
+}
+.side-panel-body { flex: 1; overflow-y: auto; padding: 20px 24px; }
+.side-panel-footer { padding: 20px 24px; border-top: 1px solid #f0e5d5; }
+
+.close-btn {
+  background: none; border: none;
+  font-size: 1.6rem;
+  color: var(--text-light);
+  line-height: 1;
+}
+.close-btn:hover { color: var(--brown); }
+
+.empty-msg { text-align: center; color: var(--text-light); padding: 40px 10px; }
+
+/* Cart item */
+.cart-item, .wishlist-item {
+  display: flex;
+  gap: 14px;
+  padding: 14px 0;
+  border-bottom: 1px solid #f4ede1;
+  align-items: center;
+}
+.cart-item img, .wishlist-item img {
+  width: 70px; height: 70px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+}
+.cart-item-info, .wishlist-item-info { flex: 1; }
+.cart-item-name { font-weight: 600; font-size: 0.92rem; color: var(--brown-dark); margin-bottom: 2px; }
+.cart-item-meta { font-size: 0.8rem; color: var(--text-light); }
+.cart-item-price { font-weight: 700; color: var(--brown); margin-top: 4px; font-size: 0.9rem; }
+
+.cart-item-actions { display: flex; align-items: center; gap: 8px; }
+
+/* Cart rows: thumbnail on the left; on the right the name sits on top and
+   quantity controls + price share ONE line underneath. */
+.cart-item { display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: 14px; align-items: start; }
+.cart-item img { width: 72px; height: 72px; }
+.cart-item-info { min-width: 0; }
+.cart-item-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.cart-item-top .cart-item-name { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.cart-item .remove-btn { margin: 0; flex: none; padding: 0; }
+.cart-item-meta { margin: 3px 0 0; overflow-wrap: anywhere; }
+.cart-item-bottom { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 10px; flex-wrap: nowrap; }
+.cart-item-bottom .cart-item-price { margin: 0; white-space: nowrap; }
+.qty-value { min-width: 22px; text-align: center; font-weight: 600; font-size: 0.92rem; }
+.qty-btn {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  border: 1px solid var(--brown);
+  background: var(--white);
+  color: var(--brown);
+  font-size: 0.9rem;
+  line-height: 1;
+}
+.qty-btn:hover { background: var(--brown); color: var(--white); }
+.remove-btn {
+  background: none; border: none;
+  color: #c0392b;
+  font-size: 0.8rem;
+  text-decoration: underline;
+  margin-top: 6px;
+}
+
+.cart-line { display: flex; justify-content: space-between; font-size: 0.92rem; margin-bottom: 8px; color: var(--text); }
+.cart-total { font-weight: 700; font-size: 1.1rem; color: var(--brown-dark); border-top: 1px solid #f0e5d5; padding-top: 10px; margin-top: 4px; }
+.cart-buttons { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
+.cart-buttons .btn { width: 100%; padding: 13px 16px; font-size: 0.92rem; white-space: nowrap; }
+
+/* =============== MODAL =============== */
+.modal {
+  position: fixed;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -48%);
+  background: var(--white);
+  border-radius: var(--radius);
+  z-index: 1200;
+  width: 480px;
+  max-width: 92vw;
+  max-height: 88vh;
+  overflow-y: auto;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  box-shadow: var(--shadow);
+}
+.modal.show { opacity: 1; visibility: visible; transform: translate(-50%, -50%); }
+.modal-content { padding: 34px; position: relative; }
+#checkout-modal { width: 620px; }
+.modal-large { width: auto; }
+.modal .close-btn { position: absolute; top: 14px; right: 18px; }
+
+/* One column: customer info -> delivery -> payment method -> Order Summary (+ Place Order) */
+.checkout-grid { display: flex; flex-direction: column; gap: 10px; }
+.checkout-fields { min-width: 0; }
+.checkout-summary { min-width: 0; background: var(--cream); padding: 22px; border-radius: var(--radius-sm); border: 1.5px solid #f0d9b5; }
+.checkout-products { max-height: 180px; overflow-y: auto; margin-bottom: 14px; }
+.checkout-product-line { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 6px; }
+.pickup-info { background: var(--cream); padding: 14px 18px; border-radius: var(--radius-sm); margin-bottom: 18px; font-size: 0.88rem; }
+.pickup-info p { margin-bottom: 4px; color: var(--text); }
+
+.order-number {
+  text-align: center;
+  font-weight: 700;
+  font-size: 1.2rem;
+  color: var(--brown);
+  background: var(--cream);
+  padding: 10px;
+  border-radius: var(--radius-sm);
+}
+
+.tracking-steps { margin: 24px 0; }
+.tracking-step {
+  display: flex; align-items: center; gap: 14px;
+  padding: 10px 0;
+  color: var(--text-light);
+}
+.tracking-step.done { color: var(--brown-dark); font-weight: 600; }
+.step-dot {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  border: 2px solid #e0d5c3;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+.tracking-step.done .step-dot { background: var(--berry); border-color: var(--berry); color: var(--white); }
+.tracking-eta { text-align: center; font-size: 0.9rem; }
+
+.auth-tabs { display: flex; gap: 10px; margin-bottom: 24px; }
+.auth-tab {
+  flex: 1;
+  background: var(--cream);
+  border: none;
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  color: var(--text-light);
+}
+.auth-tab.active { background: var(--berry); color: var(--white); }
+.auth-hint { text-align: center; font-size: 0.85rem; margin-top: 14px; }
+
+#account-orders { max-height: 220px; overflow-y: auto; margin-bottom: 20px; }
+.account-order-line { padding: 10px 0; border-bottom: 1px solid #f0e5d5; font-size: 0.88rem; }
+
+/* =============== ANIMATIONS =============== */
+.fade-in { animation: fadeIn 0.8s ease both; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
+.reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.6s ease, transform 0.6s ease; }
+.reveal.in-view { opacity: 1; transform: translateY(0); }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+
+/* =============== RESPONSIVE =============== */
+@media (max-width: 1080px) {
+  .nav-links {
+    position: fixed;
+    top: 72px; left: 0; right: 0;
+    background: var(--white);
+    flex-direction: column;
+    gap: 0;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.35s ease;
+    box-shadow: var(--shadow-soft);
+  }
+  .nav-links.open { max-height: 400px; }
+  .nav-links li { width: 100%; }
+  .nav-link { display: block; padding: 16px 24px; border-bottom: 1px solid #f4ede1; }
+  .hamburger { display: flex; }
+  .cake-preview { position: static; }
+}
+
+@media (max-width: 640px) {
+  .navbar { padding: 12px 16px; }
+  .hero { flex-direction: column; padding: 40px 18px; text-align: center; }
+  .hero-buttons { justify-content: center; }
+  .hero-desc { margin-left: auto; margin-right: auto; }
+  .section { padding: 44px 18px; }
+  .product-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
+  .product-img-wrap { height: 130px; }
+  .product-name { font-size: 1rem; }
+  .special-card { flex-direction: column; }
+  .special-card img { width: 100%; }
+  .modal-content { padding: 24px 20px; }
+  .side-panel { width: 100%; max-width: 100%; }
+}
+
+@media (max-width: 420px) {
+  .product-grid { grid-template-columns: 1fr; }
+}
+
+
+  /* Keep category cards readable across the reduced selection */
+  #page-categories .category-showcase {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  }
+
+
+
+    /* FIX: the HTML [hidden] attribute must win over display:flex/block rules
+       (otherwise "Discount -₱0" showed even when no promo code was applied) */
+    [hidden] { display: none !important; }
+
+    /* ---------- GCash payment panel ---------- */
+    .gcash-panel {
+      background: #eef5ff;
+      border: 1.5px solid #b9d3fb;
+      border-radius: var(--radius-sm);
+      padding: 16px 18px;
+      margin-bottom: 18px;
+    }
+    .gcash-title { margin: 0 0 10px; font-weight: 700; color: #0a56c8; font-size: 0.95rem; }
+    .gcash-steps { margin: 0; padding-left: 20px; color: var(--text); font-size: 0.88rem; }
+    .gcash-steps li { margin-bottom: 10px; padding-left: 2px; }
+    .gcash-steps li:last-child { margin-bottom: 0; }
+    .gcash-account {
+      display: flex; align-items: center; justify-content: space-between; gap: 10px 12px; flex-wrap: wrap;
+      background: var(--white); border: 1px solid #cfe0fa; border-radius: var(--radius-sm);
+      padding: 10px 12px; margin-top: 8px;
+    }
+    .gcash-account > div { display: flex; flex-direction: column; min-width: 0; }
+    .gcash-name { font-size: 0.8rem; color: var(--text-light); }
+    .gcash-number { font-size: 1.15rem; font-weight: 700; letter-spacing: 0.04em; color: var(--brown-dark); white-space: nowrap; }
+    .btn-copy {
+      flex: none; background: #0a56c8; color: #fff; border: none;
+      padding: 8px 14px; border-radius: 50px; font-weight: 600; font-size: 0.8rem;
+    }
+    .btn-copy:hover { background: #0846a3; }
+    @media (max-width: 480px) {
+      .payment-options { grid-template-columns: 1fr; }
+      .gcash-panel { padding: 14px; }
+      .gcash-steps { padding-left: 18px; }
+      .gcash-number { font-size: 1.05rem; }
+    }
+
+    /* FIX: Keep the active page fully visible */
+    .page.active .reveal {
+        opacity: 1 !important;
+        transform: translateY(0) !important;
+    }
+</style>
+</head>
+<body>
+
+<!-- ================= SKIP LINK (accessibility) ================= -->
+<a href="#main-content" class="skip-link">Skip to main content</a>
+
+<!-- ================= TOAST NOTIFICATION CONTAINER ================= -->
+<div id="toast-container" aria-live="polite"></div>
+
+<!-- ================= NAVIGATION ================= -->
+<header class="site-header" id="site-header">
+  <nav class="navbar" aria-label="Main navigation">
+    <a href="#home" class="logo" data-page="home">
+      <span class="logo-icon">🍰</span> Sweet Crumbs
+    </a>
+
+    <ul class="nav-links" id="nav-links">
+      <li><a href="#home" class="nav-link" data-page="home">Home</a></li>
+      <li><a href="#featured-heading" class="nav-link" data-page="home" data-scroll-target="featured-heading">Featured</a></li>
+      <li><a href="#shop" class="nav-link" data-page="shop">Shop</a></li>
+      <li><a href="#categories" class="nav-link" data-page="categories">Categories</a></li>
+      <li><a href="#custom-cake" class="nav-link" data-page="custom-cake">Custom Cake</a></li>
+      <li><a href="#promotions" class="nav-link" data-page="promotions">Promotions</a></li>
+      <li><a href="#about" class="nav-link" data-page="about">About</a></li>
+      <li><a href="#contact" class="nav-link" data-page="contact">Contact</a></li>
+      <li><a href="#reviews-heading" class="nav-link" data-page="home" data-scroll-target="reviews-heading">Feedback</a></li>
+    </ul>
+
+    <div class="nav-actions">
+      <button class="icon-btn" id="wishlist-btn" aria-label="Open wishlist" title="Wishlist">
+        <span aria-hidden="true">♡</span>
+        <span class="badge" id="wishlist-count">0</span>
+      </button>
+      <button class="icon-btn" id="cart-btn" aria-label="Open shopping cart" title="Cart">
+        <span aria-hidden="true">🛒</span>
+        <span class="badge" id="cart-count">0</span>
+      </button>
+      <button class="icon-btn" id="account-btn" aria-label="Open account menu" title="Account">
+        <span aria-hidden="true">👤</span>
+      </button>
+      <button class="icon-btn hamburger" id="hamburger-btn" aria-label="Open menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+</header>
+
+<main id="main-content">
+
+  <!-- ============================================================
+       PAGE: HOME
+       ============================================================ -->
+  <div class="page active" id="page-home">
+
+    <!-- ================= HOME / HERO ================= -->
+    <section class="hero fade-in">
+      <div class="hero-content">
+        <p class="hero-eyebrow">Sweet Crumbs Bakery</p>
+        <h1 class="hero-title">Freshly Baked,<br>Just for You</h1>
+        <p class="hero-desc">Delicious cakes, pastries, breads, and sweet treats made fresh with love every day.</p>
+        <div class="hero-buttons">
+          <a href="#shop" class="btn btn-primary" data-page="shop">Shop Now</a>
+          <a href="#custom-cake" class="btn btn-outline" data-page="custom-cake">Create Your Cake</a>
+        </div>
+      </div>
+      <div class="hero-image">
+        <img src="https://images.unsplash.com/photo-1621303837174-89787a7d4729?auto=format&fit=crop&w=900&q=80" alt="A beautifully decorated layered cake with fresh berries on top">
+      </div>
+    </section>
+
+    <!-- ================= BEST SELLERS ================= -->
+    <section class="section" aria-labelledby="bestsellers-heading">
+      <div class="section-header">
+        <h2 id="bestsellers-heading">Best Sellers</h2>
+        <p>The treats our customers can't stop ordering</p>
+      </div>
+      <div class="product-grid" id="bestsellers-grid"></div>
+    </section>
+
+    <!-- ================= TODAY'S SPECIAL ================= -->
+    <section class="section special-section" aria-labelledby="special-heading">
+      <div class="special-card">
+        <div class="special-text">
+          <p class="hero-eyebrow">Today's Special</p>
+          <h2 id="special-heading">Ube Cake — 15% Off Today Only</h2>
+          <p>Our signature purple yam cake, baked fresh this morning with real ube halaya and creamy frosting.</p>
+          <a href="#shop" class="btn btn-primary" data-page="shop">Order Now</a>
+        </div>
+        <img src="https://images.unsplash.com/photo-1611293388250-580b08c4a145?auto=format&fit=crop&w=700&q=80" alt="Purple ube cake slice on a plate">
+      </div>
+    </section>
+
+    <!-- ================= FEATURED PRODUCTS ================= -->
+    <section class="section" aria-labelledby="featured-heading">
+      <div class="section-header">
+        <h2 id="featured-heading">Featured Products</h2>
+        <p>Hand-picked favorites from our kitchen</p>
+      </div>
+      <div class="product-grid" id="featured-grid"></div>
+    </section>
+
+    <!-- ================= CUSTOMER REVIEWS ================= -->
+    <section class="section alt-bg" aria-labelledby="reviews-heading">
+      <div class="section-header">
+        <h2 id="reviews-heading">Customer Reviews</h2>
+        <p>What our customers are saying</p>
+      </div>
+
+      <div class="reviews-grid" id="reviews-grid"></div>
+
+      <div class="review-form-wrap">
+        <h3>Share Your Experience</h3>
+        <form id="review-form" class="review-form">
+          <div class="form-row">
+            <label for="review-name">Your Name</label>
+            <input type="text" id="review-name" required>
+          </div>
+          <div class="form-row">
+            <label for="review-rating">Rating</label>
+            <select id="review-rating" required>
+              <option value="5">★★★★★ Excellent</option>
+              <option value="4">★★★★☆ Very Good</option>
+              <option value="3">★★★☆☆ Good</option>
+              <option value="2">★★☆☆☆ Fair</option>
+              <option value="1">★☆☆☆☆ Poor</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label for="review-text">Your Review</label>
+            <textarea id="review-text" rows="3" required></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary">Submit Review</button>
+        </form>
+      </div>
+    </section>
+  </div>
+
+  <!-- ============================================================
+       PAGE: CATEGORIES
+       ============================================================ -->
+  <div class="page" id="page-categories">
+    <section class="section" aria-labelledby="categories-heading">
+      <div class="section-header">
+        <h2 id="categories-heading">Shop by Category</h2>
+        <p>Pick a category to see everything we bake in it</p>
+      </div>
+
+      <div class="category-showcase">
+        <button class="category-card" data-goto-categories="Coffee|Iced Coffee|Tea|Hot Chocolate">
+          <img src="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=500&q=80" alt="Assorted drinks">
+          <div class="category-card-body">
+            <h3>All Drinks</h3>
+            <p>Enjoy classic coffee, iced coffee, tea, and hot chocolate.</p>
+            <span class="category-link">Shop Drinks →</span>
+          </div>
+        </button>
+
+        <button class="category-card" data-goto-category="Coffee">
+          <img src="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=500&q=80" alt="Coffee drinks">
+          <div class="category-card-body">
+            <h3>Coffee</h3>
+            <p>Espresso, Americano, Cappuccino, Café Latte, and Mocha.</p>
+            <span class="category-link">Shop Coffee →</span>
+          </div>
+        </button>
+
+        <button class="category-card" data-goto-category="Iced Coffee">
+          <img src="https://images.unsplash.com/photo-1461023058943-07fcbe16d735?auto=format&fit=crop&w=500&q=80" alt="Iced coffee">
+          <div class="category-card-body">
+            <h3>Iced Coffee</h3>
+            <p>Iced Americano, Iced Latte, and Iced Mocha.</p>
+            <span class="category-link">Shop Iced Coffee →</span>
+          </div>
+        </button>
+
+        <button class="category-card" data-goto-category="Tea">
+          <img src="https://images.unsplash.com/photo-1544787219-7f47ccb76574?auto=format&fit=crop&w=500&q=80" alt="Tea">
+          <div class="category-card-body">
+            <h3>Tea</h3>
+            <p>Classic green tea and black tea.</p>
+            <span class="category-link">Shop Tea →</span>
+          </div>
+        </button>
+
+        <button class="category-card" data-goto-category="Hot Chocolate">
+          <img src="https://images.unsplash.com/photo-1542990253-0d0f5be5f0ed?auto=format&fit=crop&w=500&q=80" alt="Hot chocolate">
+          <div class="category-card-body">
+            <h3>Hot Chocolate</h3>
+            <p>A comforting cup of classic hot chocolate.</p>
+            <span class="category-link">Shop Hot Chocolate →</span>
+          </div>
+        </button>
+
+        <button class="category-card" data-goto-categories="Classic Cakes|Specialty Cakes">
+          <img src="https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=500&q=80" alt="Assorted cakes">
+          <div class="category-card-body">
+            <h3>Cakes</h3>
+            <p>Classic and specialty cakes, from chocolate and ube to cheesecake and Black Forest.</p>
+            <span class="category-link">Shop Cakes →</span>
+          </div>
+        </button>
+
+        <button class="category-card" data-goto-category="Cupcakes">
+          <img src="https://images.unsplash.com/photo-1614707267537-b85aaf00c4b7?auto=format&fit=crop&w=500&q=80" alt="Assorted cupcakes">
+          <div class="category-card-body">
+            <h3>Cupcakes</h3>
+            <p>Bite-sized treats in chocolate, vanilla, strawberry, and ube.</p>
+            <span class="category-link">Shop Cupcakes →</span>
+          </div>
+        </button>
+
+        <button class="category-card" data-goto-category="Cookies">
+          <img src="https://images.unsplash.com/photo-1499636136210-6f4ee915583e?auto=format&fit=crop&w=500&q=80" alt="Assorted cookies">
+          <div class="category-card-body">
+            <h3>Cookies</h3>
+            <p>Chewy chocolate chip, double chocolate, and oatmeal cookies.</p>
+            <span class="category-link">Shop Cookies →</span>
+          </div>
+        </button>
+
+        <button class="category-card" data-goto-categories="Classic Doughnuts|Specialty Doughnuts">
+          <img src="https://images.unsplash.com/photo-1551024506-0bccd828d307?auto=format&fit=crop&w=500&q=80" alt="Assorted doughnuts">
+          <div class="category-card-body">
+            <h3>Doughnuts</h3>
+            <p>Classic and specialty doughnuts with chocolate, strawberry, ube, matcha, and caramel flavors.</p>
+            <span class="category-link">Shop Doughnuts →</span>
+          </div>
+        </button>
+
+        <button class="category-card" data-goto-category="Bread & Pastries">
+          <img src="https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&w=500&q=80" alt="Assorted bread and pastries">
+          <div class="category-card-body">
+            <h3>Bread &amp; Pastries</h3>
+            <p>Croissants, cinnamon rolls, donuts, and ensaymada, baked fresh daily.</p>
+            <span class="category-link">Shop Bread &amp; Pastries →</span>
+          </div>
+        </button>
+      </div>
+    </section>
+  </div>
+
+  <!-- ============================================================
+       PAGE: SHOP
+       ============================================================ -->
+  <div class="page" id="page-shop">
+  <section class="section" aria-labelledby="shop-heading">
+    <div class="section-header">
+      <h2 id="shop-heading">Shop All Products</h2>
+      <p>Browse our full menu of freshly made goodies</p>
+    </div>
+
+    <div class="shop-toolbar">
+      <div class="search-wrap">
+        <label for="search-input" class="visually-hidden">Search products</label>
+        <input type="search" id="search-input" placeholder="Search products...">
+      </div>
+      <div class="sort-wrap">
+        <label for="sort-select" class="visually-hidden">Sort products</label>
+        <select id="sort-select">
+          <option value="default">Sort: Featured</option>
+          <option value="price-low">Price: Low to High</option>
+          <option value="price-high">Price: High to Low</option>
+          <option value="rating">Highest Rated</option>
+          <option value="name">Name: A to Z</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="shop-category-filters" class="category-filters" role="tablist" aria-label="Product categories"></div>
+
+    <p id="results-info" class="results-info" aria-live="polite"></p>
+
+    <div class="product-grid" id="shop-grid"></div>
+  </section>
+  </div>
+
+  <!-- ============================================================
+       PAGE: CUSTOM CAKE
+       ============================================================ -->
+  <div class="page" id="page-custom-cake">
+  <section class="section alt-bg" aria-labelledby="custom-heading">
+    <div class="section-header">
+      <h2 id="custom-heading">Create Your Dream Cake</h2>
+      <p>Design a cake exactly the way you imagine it</p>
+    </div>
+
+    <div class="cake-builder">
+      <div class="cake-preview">
+        <img id="cake-preview-img" src="https://images.unsplash.com/photo-1621303837174-89787a7d4729?auto=format&fit=crop&w=700&q=80" alt="Preview of your custom cake design">
+        <div class="cake-price-tag">
+          <span>Estimated Price</span>
+          <strong id="cake-price">₱0</strong>
+        </div>
+      </div>
+
+      <form class="cake-form" id="cake-form">
+        <fieldset>
+          <legend>Cake Flavor</legend>
+          <div class="option-group" id="flavor-options">
+            <label><input type="radio" name="flavor" value="Chocolate" checked> Chocolate</label>
+            <label><input type="radio" name="flavor" value="Vanilla"> Vanilla</label>
+            <label><input type="radio" name="flavor" value="Red Velvet"> Red Velvet</label>
+            <label><input type="radio" name="flavor" value="Strawberry"> Strawberry</label>
+            <label><input type="radio" name="flavor" value="Ube"> Ube</label>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Cake Size</legend>
+          <div class="option-group" id="size-options">
+            <label><input type="radio" name="size" value="6" data-price="650" checked> 6 inches</label>
+            <label><input type="radio" name="size" value="8" data-price="850"> 8 inches</label>
+            <label><input type="radio" name="size" value="10" data-price="1100"> 10 inches</label>
+            <label><input type="radio" name="size" value="12" data-price="1400"> 12 inches</label>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Frosting</legend>
+          <div class="option-group" id="frosting-options">
+            <label><input type="radio" name="frosting" value="Vanilla" data-price="0" checked> Vanilla</label>
+            <label><input type="radio" name="frosting" value="Chocolate" data-price="0"> Chocolate</label>
+            <label><input type="radio" name="frosting" value="Strawberry" data-price="50"> Strawberry</label>
+            <label><input type="radio" name="frosting" value="Cream Cheese" data-price="80"> Cream Cheese</label>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Design</legend>
+          <div class="option-group" id="design-options">
+            <label><input type="radio" name="design" value="Simple" data-price="0" checked> Simple</label>
+            <label><input type="radio" name="design" value="Birthday" data-price="100"> Birthday</label>
+            <label><input type="radio" name="design" value="Wedding" data-price="300"> Wedding</label>
+            <label><input type="radio" name="design" value="Anniversary" data-price="200"> Anniversary</label>
+            <label><input type="radio" name="design" value="Graduation" data-price="150"> Graduation</label>
+          </div>
+        </fieldset>
+
+        <div class="form-row">
+          <label for="cake-message">Cake Message</label>
+          <input type="text" id="cake-message" maxlength="40" placeholder="e.g. Happy Birthday, Mia!">
+        </div>
+
+        <div class="form-row">
+          <label for="cake-reference-upload">Cake inspiration photo</label>
+          <input type="file" id="cake-reference-upload" accept="image/*">
+          <small>Upload a photo that shows the cake style you have in mind (up to 5 MB).</small>
+          <img id="cake-reference-preview" class="cake-reference-preview" alt="Preview of your cake inspiration photo" hidden>
+          <span class="error-msg" id="cake-reference-error" aria-live="polite"></span>
+        </div>
+
+        <div class="form-row">
+          <label for="cake-qty">Quantity</label>
+          <div class="qty-control">
+            <button type="button" id="cake-qty-minus" aria-label="Decrease quantity">−</button>
+            <input type="number" id="cake-qty" value="1" min="1" max="20" readonly>
+            <button type="button" id="cake-qty-plus" aria-label="Increase quantity">+</button>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block">Add Custom Cake to Cart</button>
+      </form>
+    </div>
+  </section>
+  </div>
+
+  <!-- ============================================================
+       PAGE: PROMOTIONS
+       ============================================================ -->
+  <div class="page" id="page-promotions">
+  <section class="section" aria-labelledby="promo-heading">
+    <div class="section-header">
+      <h2 id="promo-heading">Promotions</h2>
+      <p>Sweet deals baked in for you</p>
+    </div>
+
+    <div class="promo-grid">
+      <div class="promo-card">
+        <span class="promo-icon">🎁</span>
+        <h3>Buy 2 Get 1 Free</h3>
+        <p>On all cupcakes, every day of the week.</p>
+      </div>
+      <div class="promo-card">
+        <span class="promo-icon">🎂</span>
+        <h3>10% Off Birthday Cakes</h3>
+        <p>Celebrating a birthday? Get 10% off any birthday-design cake.</p>
+      </div>
+      <div class="promo-card">
+        <span class="promo-icon">🚚</span>
+        <h3>Free Delivery Over ₱1,000</h3>
+        <p>Spend ₱1,000 or more and delivery is on us.</p>
+      </div>
+    </div>
+
+    <div class="discount-box">
+      <h3>Have a Discount Code?</h3>
+      <p>Enter it at checkout or apply it to your cart right now.</p>
+      <div class="discount-input-row">
+        <label for="promo-code" class="visually-hidden">Discount code</label>
+        <input type="text" id="promo-code" placeholder="Enter code e.g. SWEET10">
+        <button class="btn btn-primary" id="apply-promo-btn">Apply</button>
+      </div>
+      <p id="promo-message" class="promo-message" aria-live="polite"></p>
+    </div>
+  </section>
+  </div>
+
+  <!-- ============================================================
+       PAGE: ABOUT
+       ============================================================ -->
+  <div class="page" id="page-about">
+  <section class="section" aria-labelledby="about-heading">
+    <div class="about-wrap">
+      <img src="https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=700&q=80" alt="Baker arranging fresh bread and pastries in the bakery display">
+      <div class="about-text">
+        <p class="hero-eyebrow">About Us</p>
+        <h2 id="about-heading">Baked With Love, Since Day One</h2>
+        <p>At Sweet Crumbs Bakery, we believe every celebration deserves something sweet. We prepare fresh cakes, pastries, breads, and desserts using quality ingredients and lots of love.</p>
+        <ul class="about-list">
+          <li><strong>Our Story</strong> — Started as a small home kitchen, now a beloved local bakery.</li>
+          <li><strong>Fresh Ingredients</strong> — We source quality butter, flour, and fruit every week.</li>
+          <li><strong>Freshly Baked</strong> — Everything is baked in small batches, daily.</li>
+          <li><strong>Customer Satisfaction</strong> — Your happiness is the secret ingredient we never skip.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+  </div>
+
+  <!-- ============================================================
+       PAGE: CONTACT
+       ============================================================ -->
+  <div class="page" id="page-contact">
+  <section class="section" aria-labelledby="contact-heading">
+    <div class="section-header">
+      <h2 id="contact-heading">Contact Us</h2>
+      <p>We'd love to hear from you</p>
+    </div>
+
+    <div class="contact-wrap">
+      <div class="contact-info">
+        <h3>Sweet Crumbs Bakery</h3>
+        <p><strong>Address:</strong> Davao City, Philippines</p>
+        <p><strong>Phone:</strong> +63 900 000 0000</p>
+        <p><strong>Email:</strong> sweetcrumbs@example.com</p>
+        <p><strong>Business Hours:</strong> Monday – Saturday, 8:00 AM – 8:00 PM</p>
+      </div>
+
+      <form id="contact-form" class="contact-form" novalidate>
+        <div class="form-row">
+          <label for="contact-name">Name</label>
+          <input type="text" id="contact-name" required>
+          <span class="error-msg" id="contact-name-error"></span>
+        </div>
+        <div class="form-row">
+          <label for="contact-email">Email</label>
+          <input type="email" id="contact-email" required>
+          <span class="error-msg" id="contact-email-error"></span>
+        </div>
+        <div class="form-row">
+          <label for="contact-message">Message</label>
+          <textarea id="contact-message" rows="4" required></textarea>
+          <span class="error-msg" id="contact-message-error"></span>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Send Message</button>
+      </form>
+    </div>
+  </section>
+  </div>
+
+  <!-- ================= FOOTER (shown on every page) ================= -->
+  <footer class="site-footer">
+    <div class="footer-content">
+      <p>🍰 Sweet Crumbs Bakery — Freshly Baked, Just for You</p>
+      <p>&copy; 2026 Sweet Crumbs Bakery. All rights reserved.</p>
+    </div>
+  </footer>
+
+</main>
+
+<!-- ================= CART SIDEBAR ================= -->
+<div class="overlay" id="cart-overlay"></div>
+<aside class="side-panel" id="cart-panel" aria-label="Shopping cart">
+  <div class="side-panel-header">
+    <h2>Your Cart</h2>
+    <button class="close-btn" id="cart-close-btn" aria-label="Close cart">&times;</button>
+  </div>
+  <div class="side-panel-body" id="cart-items"></div>
+  <div class="side-panel-footer" id="cart-footer">
+    <div class="cart-line"><span>Subtotal</span><span id="cart-subtotal">₱0</span></div>
+    <div class="cart-line"><span>Delivery Fee</span><span id="cart-delivery">₱0</span></div>
+    <div class="cart-line" id="cart-discount-line" hidden><span>Discount</span><span id="cart-discount">-₱0</span></div>
+    <div class="cart-line cart-total"><span>Total</span><span id="cart-total">₱0</span></div>
+    <div class="cart-buttons">
+      <button class="btn btn-primary" id="checkout-btn">Checkout</button>
+      <button class="btn btn-outline" id="continue-shopping-btn">Continue Shopping</button>
+    </div>
+  </div>
+</aside>
+
+<!-- ================= WISHLIST SIDEBAR ================= -->
+<div class="overlay" id="wishlist-overlay"></div>
+<aside class="side-panel" id="wishlist-panel" aria-label="Wishlist">
+  <div class="side-panel-header">
+    <h2>Your Wishlist</h2>
+    <button class="close-btn" id="wishlist-close-btn" aria-label="Close wishlist">&times;</button>
+  </div>
+  <div class="side-panel-body" id="wishlist-items"></div>
+</aside>
+
+<!-- ================= CHECKOUT MODAL ================= -->
+<div class="overlay" id="checkout-overlay"></div>
+<div class="modal" id="checkout-modal" role="dialog" aria-modal="true" aria-labelledby="checkout-title">
+  <div class="modal-content modal-large">
+    <button class="close-btn" id="checkout-close-btn" aria-label="Close checkout">&times;</button>
+    <h2 id="checkout-title">Checkout</h2>
+
+    <form id="checkout-form" novalidate>
+      <div class="checkout-grid">
+        <div class="checkout-fields">
+          <h3>Customer Information</h3>
+          <div class="form-row">
+            <label for="co-name">Full Name</label>
+            <input type="text" id="co-name" required>
+            <span class="error-msg" id="co-name-error"></span>
+          </div>
+          <div class="form-row">
+            <label for="co-email">Email</label>
+            <input type="email" id="co-email" required>
+            <span class="error-msg" id="co-email-error"></span>
+          </div>
+          <div class="form-row">
+            <label for="co-phone">Phone Number</label>
+            <input type="tel" id="co-phone" required>
+            <span class="error-msg" id="co-phone-error"></span>
+          </div>
+
+          <h3>Delivery Method</h3>
+          <div class="option-group">
+            <label><input type="radio" name="delivery-method" value="delivery" checked> Home Delivery</label>
+            <label><input type="radio" name="delivery-method" value="pickup"> Store Pickup</label>
+          </div>
+
+          <div id="delivery-address-wrap" class="form-row">
+            <label for="co-address">Delivery Address</label>
+            <input type="text" id="co-address">
+            <span class="error-msg" id="co-address-error"></span>
+          </div>
+
+          <div id="pickup-location-wrap" class="pickup-info" hidden>
+            <p>Pickup Location: <strong>Sweet Crumbs Bakery, Davao City, Philippines</strong></p>
+            <p>Available Monday – Saturday, 8:00 AM – 8:00 PM</p>
+          </div>
+
+          <h3>Payment Method</h3>
+          <div class="option-group payment-options" role="radiogroup" aria-label="Payment method">
+            <label><input type="radio" name="payment-method" value="cod" checked><span class="pay-text"><strong>Cash on Delivery</strong><small>Pay when you receive your order</small></span></label>
+            <label><input type="radio" name="payment-method" value="gcash"><span class="pay-text"><strong>GCash</strong><small>Send payment via the GCash app</small></span></label>
+            <label><input type="radio" name="payment-method" value="bank"><span class="pay-text"><strong>Bank Transfer</strong><small>Send to our bank account</small></span></label>
+            <label><input type="radio" name="payment-method" value="card"><span class="pay-text"><strong>Card</strong><small>Last 4 digits only</small></span></label>
+          </div>
+
+          <div class="gcash-panel" id="gcash-details" hidden>
+            <p class="gcash-title">Pay with GCash</p>
+            <ol class="gcash-steps">
+              <li>Open GCash and tap <strong>Send Money</strong>.</li>
+              <li>Send exactly <strong id="gcash-amount">₱0</strong> to:
+                <div class="gcash-account">
+                  <div>
+                    <span class="gcash-name" id="gcash-name"></span>
+                    <span class="gcash-number" id="gcash-number"></span>
+                  </div>
+                  <button type="button" class="btn-copy" id="gcash-copy-btn">Copy number</button>
+                </div>
+              </li>
+              <li>Enter the <strong>reference number</strong> from your GCash receipt below.</li>
+            </ol>
+          </div>
+
+          <div class="form-row" id="payment-reference-wrap" hidden>
+            <label for="payment-reference" id="payment-reference-label">Reference</label>
+            <input type="text" id="payment-reference" inputmode="text" maxlength="40" autocomplete="off">
+            <small id="payment-reference-hint"></small>
+            <span class="error-msg" id="payment-reference-error" aria-live="polite"></span>
+          </div>
+        </div>
+
+        <div class="checkout-summary">
+          <h3>Order Summary</h3>
+          <div id="checkout-products" class="checkout-products"></div>
+          <div class="cart-line"><span>Subtotal</span><span id="co-subtotal">₱0</span></div>
+          <div class="cart-line"><span>Delivery Fee</span><span id="co-delivery">₱0</span></div>
+          <div class="cart-line" id="co-discount-line" hidden><span>Discount</span><span id="co-discount">-₱0</span></div>
+          <div class="cart-line cart-total"><span>Grand Total</span><span id="co-total">₱0</span></div>
+          <button type="submit" class="btn btn-primary btn-block">Place Order</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ================= ORDER TRACKING MODAL ================= -->
+<div class="overlay" id="tracking-overlay"></div>
+<div class="modal" id="tracking-modal" role="dialog" aria-modal="true" aria-labelledby="tracking-title">
+  <div class="modal-content">
+    <button class="close-btn" id="tracking-close-btn" aria-label="Close order tracking">&times;</button>
+    <h2 id="tracking-title">Order Confirmed!</h2>
+    <p class="order-number" id="order-number-display"></p>
+
+    <div class="tracking-steps" id="tracking-steps">
+      <div class="tracking-step done"><span class="step-dot">✓</span><span>Order Placed</span></div>
+      <div class="tracking-step done"><span class="step-dot">✓</span><span>Order Confirmed</span></div>
+      <div class="tracking-step done"><span class="step-dot">✓</span><span>Being Prepared</span></div>
+      <div class="tracking-step"><span class="step-dot">○</span><span>Ready for Pickup / Delivery</span></div>
+      <div class="tracking-step"><span class="step-dot">○</span><span>Completed</span></div>
+    </div>
+
+    <p class="tracking-eta" id="tracking-eta"></p>
+    <button class="btn btn-primary btn-block" id="tracking-done-btn">Continue Shopping</button>
+  </div>
+</div>
+
+<!-- ================= LOGIN / REGISTER MODAL ================= -->
+<div class="overlay" id="auth-overlay"></div>
+<div class="modal" id="auth-modal" role="dialog" aria-modal="true" aria-labelledby="auth-title">
+  <div class="modal-content">
+    <button class="close-btn" id="auth-close-btn" aria-label="Close login">&times;</button>
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" data-tab="login" id="auth-title">Login</button>
+      <button class="auth-tab" data-tab="register">Register</button>
+    </div>
+
+    <form id="login-form" class="auth-form">
+      <div class="form-row">
+        <label for="login-email">Email</label>
+        <input type="email" id="login-email" required>
+        <span class="error-msg" id="login-email-error"></span>
+      </div>
+      <div class="form-row">
+        <label for="login-password">Password</label>
+        <input type="password" id="login-password" required>
+        <span class="error-msg" id="login-password-error"></span>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">Login</button>
+      <p class="auth-hint">No account yet? <button type="button" class="link-btn" id="go-to-register">Create one</button></p>
+    </form>
+
+    <form id="register-form" class="auth-form" hidden>
+      <div class="form-row">
+        <label for="register-name">Full Name</label>
+        <input type="text" id="register-name" required>
+        <span class="error-msg" id="register-name-error"></span>
+      </div>
+      <div class="form-row">
+        <label for="register-email">Email</label>
+        <input type="email" id="register-email" required>
+        <span class="error-msg" id="register-email-error"></span>
+      </div>
+      <div class="form-row">
+        <label for="register-password">Password</label>
+        <input type="password" id="register-password" required>
+        <span class="error-msg" id="register-password-error"></span>
+      </div>
+      <div class="form-row">
+        <label for="register-confirm">Confirm Password</label>
+        <input type="password" id="register-confirm" required>
+        <span class="error-msg" id="register-confirm-error"></span>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">Create Account</button>
+      <p class="auth-hint">Already have an account? <button type="button" class="link-btn" id="go-to-login">Login</button></p>
+    </form>
+  </div>
+</div>
+
+<!-- ================= ACCOUNT MENU (when logged in) ================= -->
+<div class="overlay" id="account-overlay"></div>
+<div class="modal" id="account-modal" role="dialog" aria-modal="true" aria-labelledby="account-title">
+  <div class="modal-content">
+    <button class="close-btn" id="account-close-btn" aria-label="Close account menu">&times;</button>
+    <h2 id="account-title">My Account</h2>
+    <p id="account-welcome"></p>
+    <h3>Order History</h3>
+    <div id="account-orders"></div>
+    <button class="btn btn-outline btn-block" id="logout-btn">Log Out</button>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   SWEET CRUMBS BAKERY — SCRIPT.JS
+   Vanilla JavaScript only. Data persists via localStorage.
+   ========================================================= */
+
+(function () {
+  'use strict';
+
+  /* ---------------------------------------------------------
+     1. PRODUCT DATA
+  --------------------------------------------------------- */
+  const PRODUCTS = [
+    { id: 'coffee-1', name: 'Espresso', category: 'Coffee', price: 120, rating: 0, reviews: 0,
+      desc: 'Freshly prepared espresso made for Sweet Crumbs Bakery.', img: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=500&q=80', badge: 'bestseller' },
+    { id: 'coffee-2', name: 'Americano', category: 'Coffee', price: 130, rating: 0, reviews: 0,
+      desc: 'Freshly prepared americano made for Sweet Crumbs Bakery.', img: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=500&q=80' },
+    { id: 'coffee-3', name: 'Cappuccino', category: 'Coffee', price: 140, rating: 0, reviews: 0,
+      desc: 'Freshly prepared cappuccino made for Sweet Crumbs Bakery.', img: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=500&q=80' },
+    { id: 'coffee-4', name: 'Café Latte', category: 'Coffee', price: 150, rating: 0, reviews: 0,
+      desc: 'Freshly prepared café latte made for Sweet Crumbs Bakery.', img: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=500&q=80' },
+    { id: 'coffee-5', name: 'Mocha', category: 'Coffee', price: 120, rating: 0, reviews: 0,
+      desc: 'Freshly prepared mocha made for Sweet Crumbs Bakery.', img: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=500&q=80' },
+    { id: 'iced-coffee-1', name: 'Iced Americano', category: 'Iced Coffee', price: 140, rating: 0, reviews: 0,
+      desc: 'Freshly prepared iced americano made for Sweet Crumbs Bakery.', img: 'https://images.unsplash.com/photo-1517701604599-bb29b565090c?auto=format&fit=crop&w=500&q=80' },
+    { id: 'iced-coffee-2', name: 'Iced Latte', category: 'Iced Coffee', price: 150, rating: 0, reviews: 0,
+      desc: 'Freshly prepared iced latte made for Sweet Crumbs Bakery.', img: 'https://images.unsplash.com/photo-1517701604599-bb29b565090c?auto=format&fit=crop&w=500&q=80' },
+    { id: 'iced-coffee-3', name: 'Iced Mocha', category: 'Iced Coffee', price: 160, rating: 0, reviews: 0,
+      desc: 'Freshly prepared iced mocha made for Sweet Crumbs Bakery.', img: 'https://images.unsplash.com/photo-1517701604599-bb29b565090c?auto=format&fit=crop&w=500&q=80' },
+    { id: 'tea-1', name: 'Green Tea', category: 'Tea', price: 90, rating: 0, reviews: 0,
+      desc: 'Freshly prepared green tea made for Sweet Crumbs Bakery.', img: 'https://images.unsplash.com/photo-1544787219-7f47ccb76574?auto=format&fit=crop&w=500&q=80' },
+    { id: 'tea-2', name: 'Black Tea', category: 'Tea', price: 100, rating: 0, reviews: 0,
+      desc: 'Freshly prepared black tea made for Sweet Crumbs Bakery.', img: 'https://images.unsplash.com/photo-1544787219-7f47ccb76574?auto=format&fit=crop&w=500&q=80' },
+    { id: 'chocolate-creamy-1', name: 'Classic Hot Chocolate', category: 'Hot Chocolate', price: 130, rating: 0, reviews: 0,
+      desc: 'Freshly prepared classic hot chocolate made for Sweet Crumbs Bakery.', img: 'https://images.unsplash.com/photo-1542990253-0d0f5be5f0ed?auto=format&fit=crop&w=500&q=80' },
+    { id: 'classic-cake-1', name: 'Chocolate Dream Cake', category: 'Classic Cakes', price: 999, rating: 0, reviews: 0,
+      desc: 'Freshly prepared chocolate dream cake made for Sweet Crumbs Bakery.', img: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=500&q=80' },
+    { id: 'classic-cake-2', name: 'Strawberry Bliss Cake', category: 'Classic Cakes', price: 1200, rating: 0, reviews: 0,
+      desc: 'Freshly prepared strawberry bliss cake made for Sweet Crumbs Bakery.', img: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=500&q=80', badge: 'bestseller' },
+    { id: 'classic-cake-3', name: 'Vanilla Velvet Cake', category: 'Classic Cakes', price: 890, rating: 0, reviews: 0,
+      desc: 'Freshly prepared vanilla velvet cake made for Sweet Crumbs Bakery.', img: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=500&q=80' },
+    { id: 'classic-cake-4', name: 'Red Velvet Romance', category: 'Classic Cakes', price: 900, rating: 0, reviews: 0,
+      desc: 'Freshly prepared red velvet romance made for Sweet Crumbs Bakery.', img: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=500&q=80' },
+    { id: 'classic-cake-5', name: 'Ube Cream Cake', category: 'Classic Cakes', price: 999, rating: 0, reviews: 0,
+      desc: 'Freshly prepared ube cream cake made for Sweet Crumbs Bakery.', img: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=500&q=80' },
+    { id: 'classic-cake-6', name: 'Mango Paradise Cake', category: 'Classic Cakes', price: 1200, rating: 0, reviews: 0,
+      desc: 'Freshly prepared mango paradise cake made for Sweet Crumbs Bakery.', img: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=500&q=80' },
+    { id: 'classic-cake-7', name: 'Banana Caramel Cake', category: 'Classic Cakes', price: 670, rating: 0, reviews: 0,
+      desc: 'Freshly prepared banana caramel cake made for Sweet Crumbs Bakery.', img: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=500&q=80' },
+    { id: 'classic-cake-8', name: 'Carrot Delight Cake', category: 'Classic Cakes', price: 680, rating: 0, reviews: 0,
+      desc: 'Freshly prepared carrot delight cake made for Sweet Crumbs Bakery.', img: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=500&q=80' },
+    { id: 'specialty-cake-1', name: 'Chocolate Fudge Cake', category: 'Specialty Cakes', price: 700, rating: 0, reviews: 0,
+      desc: 'Freshly prepared chocolate fudge cake made for Sweet Crumbs Bakery.', img: 'https://images.unsplash.com/photo-1565958011703-44f9829ba187?auto=format&fit=crop&w=500&q=80' },
+    { id: 'specialty-cake-2', name: 'Cookies & Cream Cake', category: 'Specialty Cakes', price: 710, rating: 0, reviews: 0,
+      desc: 'Freshly prepared cookies & cream cake made for Sweet Crumbs Bakery.', img: 'https://images.unsplash.com/photo-1565958011703-44f9829ba187?auto=format&fit=crop&w=500&q=80' },
+    { id: 'specialty-cake-3', name: 'Strawberry Shortcake', category: 'Specialty Cakes', price: 720, rating: 0, reviews: 0,
+      desc: 'Freshly prepared strawberry shortcake made for Sweet Crumbs Bakery.', img: 'https://images.unsplash.com/photo-1565958011703-44f9829ba187?auto=format&fit=crop&w=500&q=80' },
+    { id: 'specialty-cake-4', name: 'Black Forest Cake', category: 'Specialty Cakes', price: 730, rating: 0, reviews: 0,
+      desc: 'Freshly prepared black forest cake made for Sweet Crumbs Bakery.', img: 'https://images.unsplash.com/photo-1565958011703-44f9829ba187?auto=format&fit=crop&w=500&q=80', badge: 'featured' },
+    { id: 'specialty-cake-5', name: 'Cheesecake', category: 'Specialty Cakes', price: 700, rating: 0, reviews: 0,
+      desc: 'Freshly prepared cheesecake made for Sweet Crumbs Bakery.', img: 'https://images.unsplash.com/photo-1565958011703-44f9829ba187?auto=format&fit=crop&w=500&q=80' },
+    { id: 'specialty-cake-6', name: 'Mango Cheesecake', category: 'Specialty Cakes', price: 710, rating: 0, reviews: 0,
+      desc: 'Freshly prepared mango cheesecake made for Sweet Crumbs Bakery.', img: 'https://images.unsplash.com/photo-1565958011703-44f9829ba187?auto=format&fit=crop&w=500&q=80' },
+    { id: 'specialty-cake-7', name: 'Matcha Cream Cake', category: 'Specialty Cakes', price: 720, rating: 0, reviews: 0,
+      desc: 'Freshly prepared matcha cream cake made for Sweet Crumbs Bakery.', img: 'https://images.unsplash.com/photo-1565958011703-44f9829ba187?auto=format&fit=crop&w=500&q=80' },
+    { id: 'specialty-cake-8', name: 'Birthday Celebration Cake', category: 'Specialty Cakes', price: 730, rating: 0, reviews: 0,
+      desc: 'Freshly prepared birthday celebration cake made for Sweet Crumbs Bakery.', img: 'https://images.unsplash.com/photo-1565958011703-44f9829ba187?auto=format&fit=crop&w=500&q=80' },
+    { id: 'classic-doughnut-1', name: 'Glazed Delight', category: 'Classic Doughnuts', price: 50, rating: 0, reviews: 0,
+      desc: 'Freshly prepared glazed delight made for Sweet Crumbs Bakery.', img: 'https://images.unsplash.com/photo-1551024506-0bccd828d307?auto=format&fit=crop&w=500&q=80' },
+    { id: 'classic-doughnut-2', name: 'Choco Dip', category: 'Classic Doughnuts', price: 60, rating: 0, reviews: 0,
+      desc: 'Freshly prepared choco dip made for Sweet Crumbs Bakery.', img: 'https://images.unsplash.com/photo-1551024506-0bccd828d307?auto=format&fit=crop&w=500&q=80' },
+    { id: 'classic-doughnut-3', name: 'Strawberry Sprinkle', category: 'Classic Doughnuts', price: 70, rating: 0, reviews: 0,
+      desc: 'Freshly prepared strawberry sprinkle made for Sweet Crumbs Bakery.', img: 'https://images.unsplash.com/photo-1551024506-0bccd828d307?auto=format&fit=crop&w=500&q=80', badge: 'bestseller' },
+    { id: 'classic-doughnut-4', name: 'Honey Glaze', category: 'Classic Doughnuts', price: 80, rating: 0, reviews: 0,
+      desc: 'Freshly prepared honey glaze made for Sweet Crumbs Bakery.', img: 'https://images.unsplash.com/photo-1551024506-0bccd828d307?auto=format&fit=crop&w=500&q=80' },
+    { id: 'classic-doughnut-5', name: 'Sugar Kiss', category: 'Classic Doughnuts', price: 50, rating: 0, reviews: 0,
+      desc: 'Freshly prepared sugar kiss made for Sweet Crumbs Bakery.', img: 'https://images.unsplash.com/photo-1551024506-0bccd828d307?auto=format&fit=crop&w=500&q=80' },
+    { id: 'classic-doughnut-6', name: 'Double Chocolate', category: 'Classic Doughnuts', price: 60, rating: 0, reviews: 0,
+      desc: 'Freshly prepared double chocolate made for Sweet Crumbs Bakery.', img: 'https://images.unsplash.com/photo-1551024506-0bccd828d307?auto=format&fit=crop&w=500&q=80' },
+    { id: 'classic-doughnut-7', name: 'Strawberry Cream', category: 'Classic Doughnuts', price: 70, rating: 0, reviews: 0,
+      desc: 'Freshly prepared strawberry cream made for Sweet Crumbs Bakery.', img: 'https://images.unsplash.com/photo-1551024506-0bccd828d307?auto=format&fit=crop&w=500&q=80' },
+    { id: 'specialty-doughnut-1', name: 'Cookies & Cream', category: 'Specialty Doughnuts', price: 65, rating: 0, reviews: 0,
+      desc: 'Freshly prepared cookies & cream made for Sweet Crumbs Bakery.', img: 'https://images.unsplash.com/photo-1551024601-bec78aea704b?auto=format&fit=crop&w=500&q=80' },
+    { id: 'specialty-doughnut-2', name: 'Choco Hazelnut', category: 'Specialty Doughnuts', price: 75, rating: 0, reviews: 0,
+      desc: 'Freshly prepared choco hazelnut made for Sweet Crumbs Bakery.', img: 'https://images.unsplash.com/photo-1551024601-bec78aea704b?auto=format&fit=crop&w=500&q=80', badge: 'featured' },
+    { id: 'specialty-doughnut-3', name: 'Ube Dream Doughnut', category: 'Specialty Doughnuts', price: 85, rating: 0, reviews: 0,
+      desc: 'Freshly prepared ube dream doughnut made for Sweet Crumbs Bakery.', img: 'https://images.unsplash.com/photo-1551024601-bec78aea704b?auto=format&fit=crop&w=500&q=80' },
+    { id: 'specialty-doughnut-4', name: 'Matcha Bliss', category: 'Specialty Doughnuts', price: 95, rating: 0, reviews: 0,
+      desc: 'Freshly prepared matcha bliss made for Sweet Crumbs Bakery.', img: 'https://images.unsplash.com/photo-1551024601-bec78aea704b?auto=format&fit=crop&w=500&q=80' },
+    { id: 'specialty-doughnut-5', name: 'Peanut Butter Crunch', category: 'Specialty Doughnuts', price: 65, rating: 0, reviews: 0,
+      desc: 'Freshly prepared peanut butter crunch made for Sweet Crumbs Bakery.', img: 'https://images.unsplash.com/photo-1551024601-bec78aea704b?auto=format&fit=crop&w=500&q=80' },
+    { id: 'specialty-doughnut-6', name: 'Strawberry Cheesecake', category: 'Specialty Doughnuts', price: 75, rating: 0, reviews: 0,
+      desc: 'Freshly prepared strawberry cheesecake made for Sweet Crumbs Bakery.', img: 'https://images.unsplash.com/photo-1551024601-bec78aea704b?auto=format&fit=crop&w=500&q=80' },
+    { id: 'specialty-doughnut-7', name: 'S\'mores Doughnut', category: 'Specialty Doughnuts', price: 85, rating: 0, reviews: 0,
+      desc: 'Freshly prepared s\'mores doughnut made for Sweet Crumbs Bakery.', img: 'https://images.unsplash.com/photo-1551024601-bec78aea704b?auto=format&fit=crop&w=500&q=80' },
+    { id: 'specialty-doughnut-8', name: 'Caramel Crunch', category: 'Specialty Doughnuts', price: 95, rating: 0, reviews: 0,
+      desc: 'Freshly prepared caramel crunch made for Sweet Crumbs Bakery.', img: 'https://images.unsplash.com/photo-1551024601-bec78aea704b?auto=format&fit=crop&w=500&q=80' },
+    { id: 'cupcake-1', name: 'Chocolate Cupcake', category: 'Cupcakes', price: 55, rating: 0, reviews: 0,
+      desc: 'Freshly prepared chocolate cupcake made for Sweet Crumbs Bakery.', img: 'https://images.unsplash.com/photo-1614707267537-b85aaf00c4b7?auto=format&fit=crop&w=500&q=80' },
+    { id: 'cupcake-2', name: 'Vanilla Cupcake', category: 'Cupcakes', price: 65, rating: 0, reviews: 0,
+      desc: 'Freshly prepared vanilla cupcake made for Sweet Crumbs Bakery.', img: 'https://images.unsplash.com/photo-1614707267537-b85aaf00c4b7?auto=format&fit=crop&w=500&q=80' },
+    { id: 'cupcake-3', name: 'Strawberry Cupcake', category: 'Cupcakes', price: 75, rating: 0, reviews: 0,
+      desc: 'Freshly prepared strawberry cupcake made for Sweet Crumbs Bakery.', img: 'https://images.unsplash.com/photo-1614707267537-b85aaf00c4b7?auto=format&fit=crop&w=500&q=80' },
+    { id: 'cupcake-4', name: 'Ube Cupcake', category: 'Cupcakes', price: 85, rating: 0, reviews: 0,
+      desc: 'Freshly prepared ube cupcake made for Sweet Crumbs Bakery.', img: 'https://images.unsplash.com/photo-1614707267537-b85aaf00c4b7?auto=format&fit=crop&w=500&q=80' },
+    { id: 'cookie-1', name: 'Chocolate Chip Cookies', category: 'Cookies', price: 110, rating: 0, reviews: 0,
+      desc: 'Freshly prepared chocolate chip cookies made for Sweet Crumbs Bakery.', img: 'https://images.unsplash.com/photo-1499636136210-6f4ee915583e?auto=format&fit=crop&w=500&q=80', badge: 'bestseller' },
+    { id: 'cookie-2', name: 'Double Chocolate Cookies', category: 'Cookies', price: 120, rating: 0, reviews: 0,
+      desc: 'Freshly prepared double chocolate cookies made for Sweet Crumbs Bakery.', img: 'https://images.unsplash.com/photo-1499636136210-6f4ee915583e?auto=format&fit=crop&w=500&q=80' },
+    { id: 'cookie-3', name: 'Oatmeal Cookies', category: 'Cookies', price: 130, rating: 0, reviews: 0,
+      desc: 'Freshly prepared oatmeal cookies made for Sweet Crumbs Bakery.', img: 'https://images.unsplash.com/photo-1499636136210-6f4ee915583e?auto=format&fit=crop&w=500&q=80', badge: 'featured' },
+    { id: 'bread-1', name: 'Croissant', category: 'Bread & Pastries', price: 70, rating: 0, reviews: 0,
+      desc: 'Freshly prepared croissant made for Sweet Crumbs Bakery.', img: 'https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&w=500&q=80' },
+    { id: 'bread-2', name: 'Cinnamon Roll', category: 'Bread & Pastries', price: 80, rating: 0, reviews: 0,
+      desc: 'Freshly prepared cinnamon roll made for Sweet Crumbs Bakery.', img: 'https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&w=500&q=80' },
+    { id: 'bread-3', name: 'Donut', category: 'Bread & Pastries', price: 90, rating: 0, reviews: 0,
+      desc: 'Freshly prepared donut made for Sweet Crumbs Bakery.', img: 'https://images.unsplash.com/photo-1551024506-0bccd828d307?auto=format&fit=crop&w=500&q=80' },
+    { id: 'bread-4', name: 'Ensaymada', category: 'Bread & Pastries', price: 100, rating: 0, reviews: 0,
+      desc: 'Freshly prepared ensaymada made for Sweet Crumbs Bakery.', img: 'https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&w=500&q=80' }
+  ];
+  /* ---------------------------------------------------------
+     2. STATE / LOCALSTORAGE HELPERS
+  --------------------------------------------------------- */
+  const LS_KEYS = {
+    cart: 'sc_cart',
+    wishlist: 'sc_wishlist',
+    users: 'sc_users',
+    currentUser: 'sc_current_user',
+    reviews: 'sc_reviews',
+    orders: 'sc_orders',
+    theme: 'sc_theme'
+  };
+
+  function loadLS(key, fallback) {
+    try {
+      const raw = localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : fallback;
+    } catch (e) {
+      return fallback;
+    }
+  }
+  function saveLS(key, value) {
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+    } catch (e) { /* storage unavailable — fail silently */ }
+  }
+
+  let cart = loadLS(LS_KEYS.cart, []);          // [{id, name, price, qty, img, meta}]
+  let wishlist = loadLS(LS_KEYS.wishlist, []);  // [productId]
+  let appliedDiscount = 0;                       // percentage e.g. 10 for 10%
+  let appliedCode = '';
+
+  const DISCOUNT_CODES = { 'SWEET10': 10, 'WELCOME15': 15 };
+
+  const formatPeso = (num) => '₱' + Number(num).toLocaleString('en-PH', { maximumFractionDigits: 0 });
+
+  /* ---------------------------------------------------------
+     3. TOAST NOTIFICATIONS
+  --------------------------------------------------------- */
+  function showToast(message) {
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.textContent = message;
+    container.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+  }
+
+  /* ---------------------------------------------------------
+     4. NAVIGATION (mobile menu + sticky behaviour)
+  --------------------------------------------------------- */
+  const hamburgerBtn = document.getElementById('hamburger-btn');
+  const navLinks = document.getElementById('nav-links');
+
+  hamburgerBtn.addEventListener('click', () => {
+    const isOpen = navLinks.classList.toggle('open');
+    hamburgerBtn.classList.toggle('open', isOpen);
+    hamburgerBtn.setAttribute('aria-expanded', String(isOpen));
+  });
+
+  function closeMobileMenu() {
+    navLinks.classList.remove('open');
+    hamburgerBtn.classList.remove('open');
+    hamburgerBtn.setAttribute('aria-expanded', 'false');
+  }
+
+  /* ---------------------------------------------------------
+     4b. PAGE ROUTER — book-style single page navigation
+     Each top-level section lives in a .page container. Only
+     one page is visible at a time; switching pages plays a
+     short page-turn animation instead of scrolling.
+  --------------------------------------------------------- */
+  const VALID_PAGES = ['home', 'shop', 'categories', 'custom-cake', 'promotions', 'about', 'contact'];
+
+  function showPage(pageId, options) {
+    options = options || {};
+    if (!VALID_PAGES.includes(pageId)) pageId = 'home';
+
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    const target = document.getElementById('page-' + pageId);
+    if (target) {
+      // restart the animation even if the same page is re-selected
+      target.classList.remove('active');
+      void target.offsetWidth; // force reflow so the animation replays
+      target.classList.add('active');
+    }
+
+    document.querySelectorAll('.nav-link, .logo').forEach(link => {
+      link.classList.toggle('active', link.dataset.page === pageId && !link.dataset.scrollTarget);
+    });
+
+    window.scrollTo({ top: 0, behavior: 'auto' });
+    closeMobileMenu();
+
+    // Pages start hidden (display:none), so scroll-reveal can't trigger for them.
+    // Reveal everything on the page being shown.
+    if (target) target.querySelectorAll('.reveal').forEach(section => section.classList.add('in-view'));
+
+    // Shop products are rendered on demand when the page becomes visible.
+    if (pageId === 'shop' && typeof refreshShop === 'function') refreshShop();
+
+    if (options.pushHash !== false) {
+      try {
+        const current = history.state && history.state.page;
+        if (current !== pageId) history.pushState({ page: pageId }, '', '#' + pageId);
+      } catch (err) { /* history unavailable (e.g. sandboxed frame) — navigation still works */ }
+    }
+  }
+
+  // Any element with data-page navigates to that page instead of
+  // following its href (works for nav links, logo, hero buttons, etc.)
+  document.body.addEventListener('click', (e) => {
+    const navEl = e.target.closest('[data-page]:not(.page)');
+    if (navEl) {
+      e.preventDefault();
+      showPage(navEl.dataset.page);
+      // Plain "Shop" links show the whole menu again (category cards set their own filter)
+      if (navEl.dataset.page === 'shop' && typeof setActiveCategory === 'function') setActiveCategory('all');
+      if (navEl.dataset.scrollTarget) {
+        requestAnimationFrame(() => document.getElementById(navEl.dataset.scrollTarget)?.scrollIntoView({ behavior: 'smooth' }));
+      }
+    }
+  });
+
+  // "Shop this category" cards on the Categories page
+  document.querySelectorAll('.category-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const selected = card.dataset.gotoCategories
+        ? card.dataset.gotoCategories.split('|').map(category => category.trim())
+        : [card.dataset.gotoCategory];
+      const label = card.querySelector('h3') ? card.querySelector('h3').textContent.trim() : '';
+      showPage('shop');
+      setActiveCategory(selected, label);
+    });
+  });
+
+  // Support browser back/forward buttons
+  window.addEventListener('popstate', (e) => {
+    const pageId = (e.state && e.state.page) || location.hash.replace('#', '') || 'home';
+    showPage(pageId, { pushHash: false });
+  });
+
+  // (Initial page is loaded at the very end of the script, once everything is defined.)
+
+  /* ---------------------------------------------------------
+     5. SCROLL REVEAL ANIMATION
+  --------------------------------------------------------- */
+  document.querySelectorAll('.section').forEach(sec => sec.classList.add('reveal'));
+  const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('in-view');
+        revealObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+  /* ---------------------------------------------------------
+     6. PRODUCT CARD RENDERING
+  --------------------------------------------------------- */
+  function starString(rating) {
+    const full = Math.round(rating);
+    return '★'.repeat(full) + '☆'.repeat(5 - full);
+  }
+
+  function createProductCard(product) {
+    const inWishlist = wishlist.includes(product.id);
+    const card = document.createElement('article');
+    card.className = 'product-card';
+    card.innerHTML = `
+      <div class="product-img-wrap">
+        <img src="${product.img}" alt="${product.name}" loading="eager">
+        <button class="wishlist-toggle ${inWishlist ? 'active' : ''}" data-id="${product.id}" aria-label="Toggle wishlist for ${product.name}" aria-pressed="${inWishlist}">
+          ${inWishlist ? '♥' : '♡'}
+        </button>
+      </div>
+      <div class="product-body">
+        <p class="product-category">${product.category}</p>
+        <h3 class="product-name">${product.name}</h3>
+        <p class="product-desc">${product.desc}</p>
+        <p class="product-rating">${starString(product.rating)} <span class="count">(${product.reviews})</span></p>
+        <div class="product-footer">
+          <span class="product-price">${formatPeso(product.price)}</span>
+          <button class="add-cart-btn" data-id="${product.id}">Add to Cart</button>
+        </div>
+      </div>
+    `;
+    return card;
+  }
+
+  function renderGrid(container, products) {
+    container.innerHTML = '';
+    if (products.length === 0) {
+      container.innerHTML = '<p class="empty-msg">No products match your search.</p>';
+      return;
+    }
+    products.forEach(p => container.appendChild(createProductCard(p)));
+  }
+
+  const bestsellersGrid = document.getElementById('bestsellers-grid');
+  const featuredGrid = document.getElementById('featured-grid');
+  const shopGrid = document.getElementById('shop-grid');
+  const resultsInfo = document.getElementById('results-info');
+
+  renderGrid(bestsellersGrid, PRODUCTS.filter(p => p.badge === 'bestseller'));
+  renderGrid(featuredGrid, PRODUCTS.filter(p => p.badge === 'featured'));
+
+  /* ---------------------------------------------------------
+     7. SHOP: SEARCH + FILTER + SORT
+  --------------------------------------------------------- */
+  const searchInput = document.getElementById('search-input');
+  const sortSelect = document.getElementById('sort-select');
+  const filterContainer = document.getElementById('shop-category-filters');
+   const categories = ['all', ...new Set(PRODUCTS.map(p => p.category))];
+   filterContainer.innerHTML = categories.map(category => {
+     const label = category === 'all' ? 'All' : category;
+     return `<button class="filter-btn${category === 'all' ? ' active' : ''}" data-category="${category}" role="tab" aria-selected="${category === 'all'}">${label}</button>`;
+   }).join('');
+   const filterBtns = document.querySelectorAll('.filter-btn');
+  let activeCategories = null;
+
+  // Used when arriving from the Categories page — activates a filter button
+  // by category name and refreshes the shop grid to match.
+  function setActiveCategory(category, label) {
+    const selectedCategories = Array.isArray(category) ? category : [category];
+    if (!selectedCategories.length || !selectedCategories[0]) return;
+    activeCategories = selectedCategories.includes('all') ? null : selectedCategories;
+    searchInput.value = '';
+    const shopHeading = document.getElementById('shop-heading');
+    if (shopHeading) {
+      shopHeading.textContent = activeCategories
+        ? 'Shop ' + (label || (activeCategories.length === 1 ? activeCategories[0] : 'Selection'))
+        : 'Shop All Products';
+    }
+    filterBtns.forEach(b => {
+      const match = activeCategories
+        ? activeCategories.includes(b.dataset.category)
+        : b.dataset.category === 'all';
+      b.classList.toggle('active', match);
+      b.setAttribute('aria-selected', String(match));
+    });
+    refreshShop();
+  }
+
+  function getFilteredProducts() {
+    const query = searchInput.value.trim().toLowerCase();
+    let list = PRODUCTS.filter(p => {
+      const matchesCategory = !activeCategories || activeCategories.includes(p.category);
+      const matchesSearch = !query || p.name.toLowerCase().includes(query) || p.desc.toLowerCase().includes(query);
+      return matchesCategory && matchesSearch;
+    });
+
+    switch (sortSelect.value) {
+      case 'price-low': list.sort((a, b) => a.price - b.price); break;
+      case 'price-high': list.sort((a, b) => b.price - a.price); break;
+      case 'rating': list.sort((a, b) => b.rating - a.rating); break;
+      case 'name': list.sort((a, b) => a.name.localeCompare(b.name)); break;
+      default: break;
+    }
+    return list;
+  }
+
+  function refreshShop() {
+    const list = getFilteredProducts();
+    renderGrid(shopGrid, list);
+    resultsInfo.textContent = `Showing ${list.length} of ${PRODUCTS.length} products`;
+  }
+
+  searchInput.addEventListener('input', refreshShop);
+  sortSelect.addEventListener('change', refreshShop);
+  filterBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      setActiveCategory(btn.dataset.category, btn.textContent.trim());
+    });
+  });
+
+  refreshShop();
+
+  /* ---------------------------------------------------------
+     8. ADD TO CART / WISHLIST — event delegation
+  --------------------------------------------------------- */
+  function findProduct(id) { return PRODUCTS.find(p => p.id === id); }
+
+  function addToCart(item) {
+    // item: {id, name, price, img, qty, meta(optional string)}
+    const existing = cart.find(c => c.id === item.id && c.meta === item.meta);
+    if (existing) {
+      existing.qty += item.qty;
+    } else {
+      cart.push(item);
+    }
+    saveLS(LS_KEYS.cart, cart);
+    updateCartUI();
+    showToast(`${item.name} added to your cart!`);
+  }
+
+  document.body.addEventListener('click', (e) => {
+    const addBtn = e.target.closest('.add-cart-btn');
+    if (addBtn) {
+      const product = findProduct(addBtn.dataset.id);
+      if (product) {
+        addToCart({ id: product.id, name: product.name, price: product.price, img: product.img, qty: 1 });
+      }
+      return;
+    }
+
+    const wishBtn = e.target.closest('.wishlist-toggle');
+    if (wishBtn) {
+      toggleWishlist(wishBtn.dataset.id, wishBtn);
+    }
+  });
+
+  function toggleWishlist(id, btnEl) {
+    const product = findProduct(id);
+    if (!product) return;
+    const index = wishlist.indexOf(id);
+    if (index > -1) {
+      wishlist.splice(index, 1);
+      showToast(`${product.name} removed from wishlist`);
+    } else {
+      wishlist.push(id);
+      showToast(`${product.name} added to wishlist!`);
+    }
+    saveLS(LS_KEYS.wishlist, wishlist);
+    document.querySelectorAll(`.wishlist-toggle[data-id="${id}"]`).forEach(btn => {
+      const active = wishlist.includes(id);
+      btn.classList.toggle('active', active);
+      btn.textContent = active ? '♥' : '♡';
+      btn.setAttribute('aria-pressed', String(active));
+    });
+    updateWishlistCount();
+    renderWishlistPanel();
+  }
+
+  function updateWishlistCount() {
+    document.getElementById('wishlist-count').textContent = wishlist.length;
+  }
+
+  /* ---------------------------------------------------------
+     9. CART PANEL
+  --------------------------------------------------------- */
+  const cartPanel = document.getElementById('cart-panel');
+  const cartOverlay = document.getElementById('cart-overlay');
+  const cartItemsEl = document.getElementById('cart-items');
+
+  function openPanel(panel, overlay) {
+    panel.classList.add('show');
+    overlay.classList.add('show');
+  }
+  function closePanel(panel, overlay) {
+    panel.classList.remove('show');
+    overlay.classList.remove('show');
+  }
+
+  document.getElementById('cart-btn').addEventListener('click', () => openPanel(cartPanel, cartOverlay));
+  document.getElementById('cart-close-btn').addEventListener('click', () => closePanel(cartPanel, cartOverlay));
+  cartOverlay.addEventListener('click', () => closePanel(cartPanel, cartOverlay));
+  document.getElementById('continue-shopping-btn').addEventListener('click', () => closePanel(cartPanel, cartOverlay));
+
+  function cartSubtotal() {
+    return cart.reduce((sum, item) => sum + item.price * item.qty, 0);
+  }
+  function deliveryFee() {
+    const sub = cartSubtotal();
+    if (sub === 0) return 0;
+    return sub >= 1000 ? 0 : 50;
+  }
+  function discountAmount() {
+    return Math.round(cartSubtotal() * (appliedDiscount / 100));
+  }
+  function cartTotal() {
+    return Math.max(0, cartSubtotal() + deliveryFee() - discountAmount());
+  }
+
+  function renderCartItem(item, index) {
+    const div = document.createElement('div');
+    div.className = 'cart-item';
+    div.innerHTML = `
+      <img src="${item.img}" alt="${escapeHtml(item.name)}">
+      <div class="cart-item-info">
+        <div class="cart-item-top">
+          <p class="cart-item-name">${escapeHtml(item.name)}</p>
+          <button class="remove-btn" data-index="${index}" aria-label="Remove ${escapeHtml(item.name)} from cart">Remove</button>
+        </div>
+        ${item.meta ? `<p class="cart-item-meta">${escapeHtml(item.meta)}</p>` : ''}
+        <div class="cart-item-bottom">
+          <div class="cart-item-actions">
+            <button class="qty-btn minus" data-index="${index}" aria-label="Decrease quantity of ${escapeHtml(item.name)}">−</button>
+            <span class="qty-value">${item.qty}</span>
+            <button class="qty-btn plus" data-index="${index}" aria-label="Increase quantity of ${escapeHtml(item.name)}">+</button>
+          </div>
+          <p class="cart-item-price">${formatPeso(item.price * item.qty)}</p>
+        </div>
+      </div>
+    `;
+    return div;
+  }
+
+  function updateCartUI() {
+    cartItemsEl.innerHTML = '';
+    if (cart.length === 0) {
+      cartItemsEl.innerHTML = '<p class="empty-msg">Your cart is empty. Time to treat yourself!</p>';
+    } else {
+      cart.forEach((item, index) => cartItemsEl.appendChild(renderCartItem(item, index)));
+    }
+
+    document.getElementById('cart-subtotal').textContent = formatPeso(cartSubtotal());
+    document.getElementById('cart-delivery').textContent = cartSubtotal() >= 1000 || cartSubtotal() === 0 ? formatPeso(deliveryFee()) : formatPeso(deliveryFee());
+    const discountLine = document.getElementById('cart-discount-line');
+    if (appliedDiscount > 0) {
+      discountLine.hidden = false;
+      document.getElementById('cart-discount').textContent = '-' + formatPeso(discountAmount());
+    } else {
+      discountLine.hidden = true;
+    }
+    document.getElementById('cart-total').textContent = formatPeso(cartTotal());
+    document.getElementById('cart-count').textContent = cart.reduce((sum, i) => sum + i.qty, 0);
+  }
+
+  cartItemsEl.addEventListener('click', (e) => {
+    const minusBtn = e.target.closest('.qty-btn.minus');
+    const plusBtn = e.target.closest('.qty-btn.plus');
+    const removeBtn = e.target.closest('.remove-btn');
+
+    if (minusBtn) {
+      const idx = Number(minusBtn.dataset.index);
+      cart[idx].qty -= 1;
+      if (cart[idx].qty <= 0) cart.splice(idx, 1);
+      saveLS(LS_KEYS.cart, cart);
+      updateCartUI();
+    }
+    if (plusBtn) {
+      const idx = Number(plusBtn.dataset.index);
+      cart[idx].qty += 1;
+      saveLS(LS_KEYS.cart, cart);
+      updateCartUI();
+    }
+    if (removeBtn) {
+      const idx = Number(removeBtn.dataset.index);
+      const removed = cart[idx];
+      cart.splice(idx, 1);
+      saveLS(LS_KEYS.cart, cart);
+      updateCartUI();
+      showToast(`${removed.name} removed from cart`);
+    }
+  });
+
+  /* ---------------------------------------------------------
+     10. WISHLIST PANEL
+  --------------------------------------------------------- */
+  const wishlistPanel = document.getElementById('wishlist-panel');
+  const wishlistOverlay = document.getElementById('wishlist-overlay');
+  const wishlistItemsEl = document.getElementById('wishlist-items');
+
+  document.getElementById('wishlist-btn').addEventListener('click', () => {
+    renderWishlistPanel();
+    openPanel(wishlistPanel, wishlistOverlay);
+  });
+  document.getElementById('wishlist-close-btn').addEventListener('click', () => closePanel(wishlistPanel, wishlistOverlay));
+  wishlistOverlay.addEventListener('click', () => closePanel(wishlistPanel, wishlistOverlay));
+
+  function renderWishlistPanel() {
+    wishlistItemsEl.innerHTML = '';
+    if (wishlist.length === 0) {
+      wishlistItemsEl.innerHTML = '<p class="empty-msg">Your wishlist is empty. Tap the heart on any product to save it here.</p>';
+      return;
+    }
+    wishlist.forEach(id => {
+      const product = findProduct(id);
+      if (!product) return;
+      const div = document.createElement('div');
+      div.className = 'wishlist-item';
+      div.innerHTML = `
+        <img src="${product.img}" alt="${product.name}">
+        <div class="wishlist-item-info">
+          <p class="cart-item-name">${product.name}</p>
+          <p class="cart-item-price">${formatPeso(product.price)}</p>
+          <button class="add-cart-btn" data-id="${product.id}">Add to Cart</button>
+        </div>
+      `;
+      wishlistItemsEl.appendChild(div);
+    });
+  }
+
+  /* ---------------------------------------------------------
+     11. CUSTOM CAKE BUILDER
+  --------------------------------------------------------- */
+  const cakeForm = document.getElementById('cake-form');
+  const cakePriceEl = document.getElementById('cake-price');
+  const cakeQtyInput = document.getElementById('cake-qty');
+  const cakePreviewImg = document.getElementById('cake-preview-img');
+  const cakeReferenceInput = document.getElementById('cake-reference-upload');
+  const cakeReferencePreview = document.getElementById('cake-reference-preview');
+  let cakeReferenceImage = '';
+
+  cakeReferenceInput.addEventListener('change', () => {
+    const file = cakeReferenceInput.files[0];
+    const errorEl = document.getElementById('cake-reference-error');
+    errorEl.textContent = '';
+    if (!file) {
+      cakeReferenceImage = '';
+      cakeReferencePreview.hidden = true;
+      return;
+    }
+    if (!file.type.startsWith('image/') || file.size > 5 * 1024 * 1024) {
+      errorEl.textContent = 'Choose an image file smaller than 5 MB.';
+      cakeReferenceInput.value = '';
+      cakeReferencePreview.hidden = true;
+      cakeReferenceImage = '';
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const sourceImage = new Image();
+      sourceImage.onload = () => {
+        const scale = Math.min(1, 1000 / Math.max(sourceImage.width, sourceImage.height));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(sourceImage.width * scale);
+        canvas.height = Math.round(sourceImage.height * scale);
+        canvas.getContext('2d').drawImage(sourceImage, 0, 0, canvas.width, canvas.height);
+        cakeReferenceImage = canvas.toDataURL('image/jpeg', 0.78);
+        cakeReferencePreview.src = cakeReferenceImage;
+        cakeReferencePreview.hidden = false;
+      };
+      sourceImage.src = String(reader.result);
+    };
+    reader.readAsDataURL(file);
+  });
+
+  const FLAVOR_IMAGES = {
+    'Chocolate': 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=700&q=80',
+    'Vanilla': 'https://images.unsplash.com/photo-1621303837174-89787a7d4729?auto=format&fit=crop&w=700&q=80',
+    'Red Velvet': 'https://images.unsplash.com/photo-1586985289906-406988974504?auto=format&fit=crop&w=700&q=80',
+    'Strawberry': 'https://images.unsplash.com/photo-1565958011703-44f9829ba187?auto=format&fit=crop&w=700&q=80',
+    'Ube': 'https://images.unsplash.com/photo-1611293388250-580b08c4a145?auto=format&fit=crop&w=700&q=80'
+  };
+
+  function calcCakePrice() {
+    const sizePrice = Number(cakeForm.querySelector('input[name="size"]:checked').dataset.price);
+    const frostingPrice = Number(cakeForm.querySelector('input[name="frosting"]:checked').dataset.price);
+    const designPrice = Number(cakeForm.querySelector('input[name="design"]:checked').dataset.price);
+    const qty = Number(cakeQtyInput.value);
+    const unitPrice = sizePrice + frostingPrice + designPrice;
+    return { unitPrice, total: unitPrice * qty, qty };
+  }
+
+  function updateCakePreview() {
+    const { total } = calcCakePrice();
+    cakePriceEl.textContent = formatPeso(total);
+    const flavor = cakeForm.querySelector('input[name="flavor"]:checked').value;
+    cakePreviewImg.src = FLAVOR_IMAGES[flavor] || FLAVOR_IMAGES['Chocolate'];
+    cakePreviewImg.alt = `Preview of a ${flavor} custom cake`;
+  }
+
+  cakeForm.addEventListener('change', updateCakePreview);
+
+  document.getElementById('cake-qty-minus').addEventListener('click', () => {
+    const val = Math.max(1, Number(cakeQtyInput.value) - 1);
+    cakeQtyInput.value = val;
+    updateCakePreview();
+  });
+  document.getElementById('cake-qty-plus').addEventListener('click', () => {
+    const val = Math.min(20, Number(cakeQtyInput.value) + 1);
+    cakeQtyInput.value = val;
+    updateCakePreview();
+  });
+
+  cakeForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const flavor = cakeForm.querySelector('input[name="flavor"]:checked').value;
+    const size = cakeForm.querySelector('input[name="size"]:checked').value;
+    const frosting = cakeForm.querySelector('input[name="frosting"]:checked').value;
+    const design = cakeForm.querySelector('input[name="design"]:checked').value;
+    const message = document.getElementById('cake-message').value.trim();
+    const { unitPrice, qty } = calcCakePrice();
+
+    const metaParts = [`${size}" • ${flavor} • ${frosting} frosting • ${design}`];
+    if (message) metaParts.push(`Message: "${message}"`);
+    if (cakeReferenceImage) metaParts.push('Cake inspiration photo attached');
+
+    addToCart({
+      id: 'custom-' + Date.now(),
+      name: 'Custom Cake',
+      price: unitPrice,
+      img: cakeReferenceImage || cakePreviewImg.src,
+      qty: qty,
+      meta: metaParts.join(' — ')
+    });
+
+    cakeForm.reset();
+    cakeQtyInput.value = 1;
+    cakeReferenceImage = '';
+    cakeReferencePreview.hidden = true;
+    updateCakePreview();
+  });
+
+  updateCakePreview();
+
+  /* ---------------------------------------------------------
+     12. PROMOTIONS / DISCOUNT CODE
+  --------------------------------------------------------- */
+  document.getElementById('apply-promo-btn').addEventListener('click', applyPromoCode);
+  document.getElementById('promo-code').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); applyPromoCode(); }
+  });
+
+  function applyPromoCode() {
+    const codeInput = document.getElementById('promo-code');
+    const code = codeInput.value.trim().toUpperCase();
+    const messageEl = document.getElementById('promo-message');
+
+    if (!code) {
+      messageEl.textContent = 'Please enter a discount code.';
+      messageEl.style.color = '#c0392b';
+      return;
+    }
+    if (DISCOUNT_CODES[code]) {
+      appliedDiscount = DISCOUNT_CODES[code];
+      appliedCode = code;
+      messageEl.textContent = `Code "${code}" applied — ${appliedDiscount}% off your order!`;
+      messageEl.style.color = '#4f3019';
+      showToast(`Discount code ${code} applied!`);
+      updateCartUI();
+    } else {
+      appliedDiscount = 0;
+      appliedCode = '';
+      messageEl.textContent = 'Invalid discount code. Please try again.';
+      messageEl.style.color = '#c0392b';
+      updateCartUI();
+    }
+  }
+
+  /* ---------------------------------------------------------
+     13. CHECKOUT
+  --------------------------------------------------------- */
+  const checkoutModal = document.getElementById('checkout-modal');
+  const checkoutOverlay = document.getElementById('checkout-overlay');
+  const paymentReferenceWrap = document.getElementById('payment-reference-wrap');
+  const paymentReferenceInput = document.getElementById('payment-reference');
+
+  // >>> Replace with the bakery's real GCash account details <<<
+  const GCASH_ACCOUNT = { name: 'Sweet Crumbs Bakery', number: '0900 000 0000' };
+
+  // What each non-cash method asks for, and how it is checked
+  const PAYMENT_CONFIG = {
+    gcash: {
+      label: 'GCash reference number',
+      placeholder: 'e.g. 1234 567 890123',
+      hint: 'Find it on your GCash receipt under "Ref No." (13 digits).',
+      error: 'Enter the 13-digit GCash reference number from your receipt.',
+      inputMode: 'numeric',
+      isValid: v => /^\d{13}$/.test(v.replace(/[\s-]/g, '')),
+      clean: v => v.replace(/[\s-]/g, '')
+    },
+    bank: {
+      label: 'Bank transfer reference code',
+      placeholder: 'Enter your transfer reference code',
+      hint: 'Never enter your PIN or online-banking password. Payment is confirmed with the bakery.',
+      error: 'Enter the bank transfer reference code.',
+      inputMode: 'text',
+      isValid: v => v.length > 0,
+      clean: v => v
+    },
+    card: {
+      label: 'Last 4 digits of your card',
+      placeholder: 'e.g. 4821',
+      hint: 'Never enter your full card number, PIN, or security code. Payment is confirmed with the bakery.',
+      error: 'Enter the last 4 digits of your card.',
+      inputMode: 'text',
+      isValid: v => v.length > 0,
+      clean: v => v
+    }
+  };
+
+  const gcashPanel = document.getElementById('gcash-details');
+  document.getElementById('gcash-name').textContent = GCASH_ACCOUNT.name;
+  document.getElementById('gcash-number').textContent = GCASH_ACCOUNT.number;
+
+  // Show/hide the GCash instructions and the reference field for the selected method
+  function syncPaymentUI() {
+    const checked = document.querySelector('input[name="payment-method"]:checked');
+    const method = checked ? checked.value : 'cod';
+    const cfg = PAYMENT_CONFIG[method];
+
+    gcashPanel.hidden = method !== 'gcash';
+    paymentReferenceWrap.hidden = !cfg;
+    paymentReferenceInput.required = !!cfg;
+    if (cfg) {
+      document.getElementById('payment-reference-label').textContent = cfg.label;
+      document.getElementById('payment-reference-hint').textContent = cfg.hint;
+      paymentReferenceInput.placeholder = cfg.placeholder;
+      paymentReferenceInput.inputMode = cfg.inputMode;
+    }
+    document.getElementById('payment-reference-error').textContent = '';
+  }
+
+  document.querySelectorAll('input[name="payment-method"]').forEach(radio => {
+    radio.addEventListener('change', () => {
+      if (!radio.checked) return;
+      paymentReferenceInput.value = '';   // each method uses a different kind of reference
+      syncPaymentUI();
+    });
+  });
+
+  document.getElementById('gcash-copy-btn').addEventListener('click', () => {
+    const digits = GCASH_ACCOUNT.number.replace(/\s/g, '');
+    const done = () => showToast('GCash number copied!');
+    const fallback = () => {
+      const t = document.createElement('textarea');
+      t.value = digits; t.setAttribute('readonly', '');
+      t.style.position = 'fixed'; t.style.opacity = '0';
+      document.body.appendChild(t); t.select();
+      let ok = false;
+      try { ok = document.execCommand('copy'); } catch (err) {}
+      t.remove();
+      ok ? done() : showToast('Could not copy. GCash number: ' + GCASH_ACCOUNT.number);
+    };
+    if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(digits).then(done, fallback);
+    else fallback();
+  });
+
+  document.getElementById('checkout-btn').addEventListener('click', () => {
+    if (cart.length === 0) {
+      showToast('Your cart is empty. Add something delicious first!');
+      return;
+    }
+    closePanel(cartPanel, cartOverlay);
+    populateCheckoutSummary();
+    openModal(checkoutModal, checkoutOverlay);
+  });
+
+  document.getElementById('checkout-close-btn').addEventListener('click', () => closeModal(checkoutModal, checkoutOverlay));
+  checkoutOverlay.addEventListener('click', () => closeModal(checkoutModal, checkoutOverlay));
+
+  function openModal(modal, overlay) {
+    modal.classList.add('show');
+    overlay.classList.add('show');
+  }
+  function closeModal(modal, overlay) {
+    modal.classList.remove('show');
+    overlay.classList.remove('show');
+  }
+
+  function populateCheckoutSummary() {
+    const productsEl = document.getElementById('checkout-products');
+    productsEl.innerHTML = cart.map(item => `
+      <div class="checkout-product-line">
+        <span>${item.name} x${item.qty}</span>
+        <span>${formatPeso(item.price * item.qty)}</span>
+      </div>
+    `).join('');
+
+    document.getElementById('co-subtotal').textContent = formatPeso(cartSubtotal());
+    document.getElementById('co-delivery').textContent = formatPeso(deliveryFee());
+    const discountLine = document.getElementById('co-discount-line');
+    if (appliedDiscount > 0) {
+      discountLine.hidden = false;
+      document.getElementById('co-discount').textContent = '-' + formatPeso(discountAmount());
+    } else {
+      discountLine.hidden = true;
+    }
+    document.getElementById('co-total').textContent = formatPeso(cartTotal());
+    document.getElementById('gcash-amount').textContent = formatPeso(cartTotal());
+    syncPaymentUI();
+  }
+
+  // Delivery method toggle
+  const deliveryRadios = document.querySelectorAll('input[name="delivery-method"]');
+  const addressWrap = document.getElementById('delivery-address-wrap');
+  const pickupWrap = document.getElementById('pickup-location-wrap');
+  deliveryRadios.forEach(radio => {
+    radio.addEventListener('change', () => {
+      const isDelivery = radio.value === 'delivery' && radio.checked;
+      if (radio.checked) {
+        addressWrap.hidden = radio.value !== 'delivery';
+        pickupWrap.hidden = radio.value !== 'pickup';
+      }
+    });
+  });
+
+  function clearError(id) {
+    const el = document.getElementById(id + '-error');
+    if (el) el.textContent = '';
+  }
+  function setError(id, message) {
+    const el = document.getElementById(id + '-error');
+    if (el) el.textContent = message;
+  }
+
+  document.getElementById('checkout-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    let valid = true;
+
+    const name = document.getElementById('co-name').value.trim();
+    const email = document.getElementById('co-email').value.trim();
+    const phone = document.getElementById('co-phone').value.trim();
+    const deliveryMethod = document.querySelector('input[name="delivery-method"]:checked').value;
+    const address = document.getElementById('co-address').value.trim();
+
+    ['co-name', 'co-email', 'co-phone', 'co-address'].forEach(clearError);
+
+    if (!name) { setError('co-name', 'Full name is required.'); valid = false; }
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setError('co-email', 'Enter a valid email address.'); valid = false; }
+    if (!phone || phone.replace(/\D/g, '').length < 7) { setError('co-phone', 'Enter a valid phone number.'); valid = false; }
+    if (deliveryMethod === 'delivery' && !address) { setError('co-address', 'Delivery address is required.'); valid = false; }
+
+    if (!valid) return;
+
+    const paymentMethod = document.querySelector('input[name="payment-method"]:checked').value;
+    const paymentReference = paymentReferenceInput.value.trim();
+    const paymentError = document.getElementById('payment-reference-error');
+    paymentError.textContent = '';
+    const paymentCfg = PAYMENT_CONFIG[paymentMethod];
+    if (paymentCfg && !paymentCfg.isValid(paymentReference)) {
+      paymentError.textContent = paymentCfg.error;
+      paymentReferenceInput.focus();
+      return;
+    }
+    const order = {
+      id: 'SC-' + Math.floor(1000 + Math.random() * 9000),
+      date: new Date().toISOString(),
+      customer: { name, email, phone },
+      deliveryMethod,
+      address: deliveryMethod === 'delivery' ? address : 'Store Pickup — Sweet Crumbs Bakery, Davao City',
+      paymentMethod,
+      paymentReference: paymentCfg ? paymentCfg.clean(paymentReference) : '',
+      items: cart.map(i => ({ name: i.name, qty: i.qty, price: i.price })),
+      subtotal: cartSubtotal(),
+      delivery: deliveryFee(),
+      discount: discountAmount(),
+      total: cartTotal()
+    };
+
+    const orders = loadLS(LS_KEYS.orders, []);
+    orders.unshift(order);
+    saveLS(LS_KEYS.orders, orders);
+
+    // Clear cart after order placed
+    cart = [];
+    appliedDiscount = 0;
+    appliedCode = '';
+    saveLS(LS_KEYS.cart, cart);
+    updateCartUI();
+
+    closeModal(checkoutModal, checkoutOverlay);
+    showOrderTracking(order);
+    e.target.reset();
+    addressWrap.hidden = false;
+    pickupWrap.hidden = true;
+    syncPaymentUI();
+  });
+
+  /* ---------------------------------------------------------
+     14. ORDER TRACKING
+  --------------------------------------------------------- */
+  const trackingModal = document.getElementById('tracking-modal');
+  const trackingOverlay = document.getElementById('tracking-overlay');
+
+  function showOrderTracking(order) {
+    document.getElementById('order-number-display').textContent = `ORDER #${order.id}`;
+    const etaText = order.deliveryMethod === 'delivery'
+      ? 'Estimated delivery: 45–60 minutes from now.'
+      : 'Estimated pickup ready time: 30–45 minutes from now.';
+    document.getElementById('tracking-eta').textContent = etaText;
+    openModal(trackingModal, trackingOverlay);
+    showToast(`Order ${order.id} placed successfully!`);
+  }
+
+  document.getElementById('tracking-close-btn').addEventListener('click', () => closeModal(trackingModal, trackingOverlay));
+  document.getElementById('tracking-done-btn').addEventListener('click', () => closeModal(trackingModal, trackingOverlay));
+  trackingOverlay.addEventListener('click', () => closeModal(trackingModal, trackingOverlay));
+
+  /* ---------------------------------------------------------
+     15. LOGIN / REGISTER (simulated via localStorage)
+  --------------------------------------------------------- */
+  const authModal = document.getElementById('auth-modal');
+  const authOverlay = document.getElementById('auth-overlay');
+  const loginForm = document.getElementById('login-form');
+  const registerForm = document.getElementById('register-form');
+  const accountModal = document.getElementById('account-modal');
+  const accountOverlay = document.getElementById('account-overlay');
+
+  function getCurrentUser() { return loadLS(LS_KEYS.currentUser, null); }
+
+  document.getElementById('account-btn').addEventListener('click', () => {
+    const user = getCurrentUser();
+    if (user) {
+      openAccountModal(user);
+    } else {
+      switchAuthTab('login');
+      openModal(authModal, authOverlay);
+    }
+  });
+
+  document.getElementById('auth-close-btn').addEventListener('click', () => closeModal(authModal, authOverlay));
+  authOverlay.addEventListener('click', () => closeModal(authModal, authOverlay));
+
+  document.querySelectorAll('.auth-tab').forEach(tab => {
+    tab.addEventListener('click', () => switchAuthTab(tab.dataset.tab));
+  });
+  document.getElementById('go-to-register').addEventListener('click', () => switchAuthTab('register'));
+  document.getElementById('go-to-login').addEventListener('click', () => switchAuthTab('login'));
+
+  function switchAuthTab(tab) {
+    document.querySelectorAll('.auth-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+    loginForm.hidden = tab !== 'login';
+    registerForm.hidden = tab !== 'register';
+  }
+
+  loginForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    clearError('login-email'); clearError('login-password');
+    const email = document.getElementById('login-email').value.trim().toLowerCase();
+    const password = document.getElementById('login-password').value;
+
+    const users = loadLS(LS_KEYS.users, []);
+    const user = users.find(u => u.email === email);
+
+    if (!user) { setError('login-email', 'No account found with this email.'); return; }
+    if (user.password !== password) { setError('login-password', 'Incorrect password.'); return; }
+
+    saveLS(LS_KEYS.currentUser, { name: user.name, email: user.email });
+    closeModal(authModal, authOverlay);
+    showToast(`Welcome back, ${user.name}!`);
+    loginForm.reset();
+  });
+
+  registerForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    ['register-name', 'register-email', 'register-password', 'register-confirm'].forEach(clearError);
+
+    const name = document.getElementById('register-name').value.trim();
+    const email = document.getElementById('register-email').value.trim().toLowerCase();
+    const password = document.getElementById('register-password').value;
+    const confirm = document.getElementById('register-confirm').value;
+
+    let valid = true;
+    if (!name) { setError('register-name', 'Name is required.'); valid = false; }
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setError('register-email', 'Enter a valid email.'); valid = false; }
+    if (!password || password.length < 6) { setError('register-password', 'Password must be at least 6 characters.'); valid = false; }
+    if (confirm !== password) { setError('register-confirm', 'Passwords do not match.'); valid = false; }
+
+    const users = loadLS(LS_KEYS.users, []);
+    if (users.some(u => u.email === email)) { setError('register-email', 'An account with this email already exists.'); valid = false; }
+
+    if (!valid) return;
+
+    users.push({ name, email, password });
+    saveLS(LS_KEYS.users, users);
+    saveLS(LS_KEYS.currentUser, { name, email });
+
+    closeModal(authModal, authOverlay);
+    showToast(`Account created — welcome, ${name}!`);
+    registerForm.reset();
+  });
+
+  function openAccountModal(user) {
+    document.getElementById('account-welcome').textContent = `Signed in as ${user.name} (${user.email})`;
+    const orders = loadLS(LS_KEYS.orders, []);
+    const ordersEl = document.getElementById('account-orders');
+    ordersEl.innerHTML = orders.length
+      ? orders.map(o => `<div class="account-order-line">#${o.id} — ${formatPeso(o.total)} — ${new Date(o.date).toLocaleDateString()}</div>`).join('')
+      : '<p class="empty-msg">No orders yet.</p>';
+    openModal(accountModal, accountOverlay);
+  }
+
+  document.getElementById('account-close-btn').addEventListener('click', () => closeModal(accountModal, accountOverlay));
+  accountOverlay.addEventListener('click', () => closeModal(accountModal, accountOverlay));
+
+  document.getElementById('logout-btn').addEventListener('click', () => {
+    localStorage.removeItem(LS_KEYS.currentUser);
+    closeModal(accountModal, accountOverlay);
+    showToast('You have been logged out.');
+  });
+
+  /* ---------------------------------------------------------
+     16. REVIEWS
+  --------------------------------------------------------- */
+  const DEFAULT_REVIEWS = [
+    { name: 'Maria S.', rating: 5, text: 'Absolutely delicious! The chocolate cake was amazing.' },
+    { name: 'Jonas R.', rating: 5, text: 'Beautiful cake and fast delivery!' },
+    { name: 'Angela P.', rating: 5, text: 'My family loved the cupcakes!' }
+  ];
+
+  function getAllReviews() {
+    const stored = loadLS(LS_KEYS.reviews, []);
+    return [...stored, ...DEFAULT_REVIEWS];
+  }
+
+  function renderReviews() {
+    const grid = document.getElementById('reviews-grid');
+    grid.innerHTML = '';
+    getAllReviews().slice(0, 9).forEach(r => {
+      const div = document.createElement('div');
+      div.className = 'review-card';
+      div.innerHTML = `
+        <p class="review-stars">${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)}</p>
+        <p>"${escapeHtml(r.text)}"</p>
+        <p class="review-name">— ${escapeHtml(r.name)}</p>
+      `;
+      grid.appendChild(div);
+    });
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  renderReviews();
+
+  document.getElementById('review-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const name = document.getElementById('review-name').value.trim();
+    const rating = Number(document.getElementById('review-rating').value);
+    const text = document.getElementById('review-text').value.trim();
+    if (!name || !text) return;
+
+    const stored = loadLS(LS_KEYS.reviews, []);
+    stored.unshift({ name, rating, text });
+    saveLS(LS_KEYS.reviews, stored);
+    renderReviews();
+    e.target.reset();
+    showToast('Thank you for your review!');
+  });
+
+  /* ---------------------------------------------------------
+     17. CONTACT FORM VALIDATION
+  --------------------------------------------------------- */
+  document.getElementById('contact-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    ['contact-name', 'contact-email', 'contact-message'].forEach(clearError);
+    let valid = true;
+
+    const name = document.getElementById('contact-name').value.trim();
+    const email = document.getElementById('contact-email').value.trim();
+    const message = document.getElementById('contact-message').value.trim();
+
+    if (!name) { setError('contact-name', 'Please enter your name.'); valid = false; }
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setError('contact-email', 'Enter a valid email address.'); valid = false; }
+    if (!message) { setError('contact-message', 'Please enter a message.'); valid = false; }
+
+    if (!valid) return;
+
+    showToast('Message sent! We will get back to you soon.');
+    e.target.reset();
+  });
+
+  /* ---------------------------------------------------------
+     18. INITIALISE
+  --------------------------------------------------------- */
+  updateCartUI();
+  updateWishlistCount();
+
+  // Open the page named in the URL hash (default: home). Runs last so that
+  // every variable the pages depend on (shop filters, cart, etc.) already exists.
+  const initialPage = location.hash ? location.hash.replace('#', '') : 'home';
+  showPage(initialPage, { pushHash: false });
+  try { history.replaceState({ page: VALID_PAGES.includes(initialPage) ? initialPage : 'home' }, '', location.href); } catch (err) {}
+
+})();
+
+</script>
+</body>
+</html>
