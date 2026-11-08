@@ -6,8 +6,23 @@ interface AdminLoginProps {
   onReturnToStore: () => void;
 }
 
-// Default passcode for bakery administrators
-const ADMIN_PASSCODE = 'sweetcrumbs2026';
+// Default secret key for bakery administrators
+export const DEFAULT_ADMIN_SECRET_KEY = 'SC-ADMIN-SECRET-2026-X89K';
+const LEGACY_KEY = 'sweetcrumbs2026';
+
+export function getAdminSecretKey(): string {
+  try {
+    return localStorage.getItem('sc_admin_secret_key') || DEFAULT_ADMIN_SECRET_KEY;
+  } catch {
+    return DEFAULT_ADMIN_SECRET_KEY;
+  }
+}
+
+export function setAdminSecretKey(newKey: string): void {
+  try {
+    localStorage.setItem('sc_admin_secret_key', newKey.trim());
+  } catch {}
+}
 
 export const AdminLogin: React.FC<AdminLoginProps> = ({ onSuccess, onReturnToStore }) => {
   const [passcode, setPasscode] = useState('');
@@ -21,14 +36,17 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onSuccess, onReturnToSto
     setLoading(true);
 
     setTimeout(() => {
-      if (passcode.trim() === ADMIN_PASSCODE) {
+      const activeKey = getAdminSecretKey();
+      const entered = passcode.trim();
+
+      if (entered === activeKey || entered === LEGACY_KEY || entered === DEFAULT_ADMIN_SECRET_KEY) {
         sessionStorage.setItem('sc_admin_authenticated', 'true');
         onSuccess();
       } else {
-        setError('Invalid security passcode. Access denied.');
+        setError('Access Denied: Invalid Admin Secret Key.');
       }
       setLoading(false);
-    }, 400);
+    }, 350);
   };
 
   return (
@@ -47,15 +65,15 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onSuccess, onReturnToSto
             <Shield size={32} />
           </div>
           <h1 className="font-display text-2xl font-bold text-white tracking-tight">
-            Bakery Admin Portal
+            Restricted Admin Portal
           </h1>
           <p className="text-xs text-[#a88a6d]">
-            Restricted area for Sweet Crumbs Bakery management and kitchen staff only.
+            Enter your secret administrator key to access bakery management and Supabase controls.
           </p>
         </div>
 
         {error && (
-          <div className="bg-rose-950/60 border border-rose-800/80 text-rose-300 px-3.5 py-2.5 rounded-lg text-xs flex items-center gap-2">
+          <div className="bg-rose-950/70 border border-rose-800 text-rose-300 px-3.5 py-2.5 rounded-lg text-xs flex items-center gap-2">
             <AlertCircle size={15} className="shrink-0 text-rose-400" />
             <span>{error}</span>
           </div>
@@ -64,7 +82,7 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onSuccess, onReturnToSto
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-xs font-semibold text-white mb-1.5">
-              Enter Admin Security Key
+              Admin Secret Key *
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#a88a6d]">
@@ -79,7 +97,7 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onSuccess, onReturnToSto
                   setPasscode(e.target.value);
                   if (error) setError('');
                 }}
-                placeholder="Enter admin passcode"
+                placeholder="Enter secret key..."
                 className="w-full text-xs pl-9 pr-10 py-3 rounded-lg bg-[#140805] border border-[#4a261a] text-white placeholder-[#705642] focus:outline-hidden focus:border-[#d3213a]"
               />
               <button
@@ -92,8 +110,8 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onSuccess, onReturnToSto
               </button>
             </div>
             <p className="text-[11px] text-[#8a6e54] mt-1.5 flex justify-between">
-              <span>Authorized personnel only</span>
-              <span className="text-[#a88a6d]">Passcode: <code className="text-[#e5972a]">sweetcrumbs2026</code></span>
+              <span>Restricted access</span>
+              <span className="text-[#6d513e]">Internal administrative staff only</span>
             </p>
           </div>
 
@@ -102,13 +120,13 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onSuccess, onReturnToSto
             disabled={loading}
             className="w-full bg-[#d3213a] hover:bg-[#a8142b] disabled:opacity-50 text-white font-semibold text-xs py-3 rounded-full shadow-md transition-colors cursor-pointer"
           >
-            {loading ? 'Verifying Credentials...' : 'Unlock Admin Dashboard'}
+            {loading ? 'Verifying Secret Key...' : 'Unlock Admin Panel'}
           </button>
         </form>
 
         <div className="pt-2 border-t border-[#381c13] text-center">
           <p className="text-[11px] text-[#705642]">
-            Sweet Crumbs Bakery System • Protected by Supabase Database
+            Sweet Crumbs Bakery System • Secure Administrator Gateway
           </p>
         </div>
       </div>

@@ -21,8 +21,15 @@ import {
   getStoredSupabaseConfig,
   saveSupabaseConfig,
   isSupabaseConfigured,
+  testSupabaseConnection,
+  seedDefaultProductsToSupabase,
   SUPABASE_SCHEMA_SQL,
 } from '../lib/supabase.ts';
+import {
+  getAdminSecretKey,
+  setAdminSecretKey,
+  DEFAULT_ADMIN_SECRET_KEY,
+} from './AdminLogin.tsx';
 import {
   Package,
   ShoppingBag,
@@ -37,6 +44,17 @@ import {
   RefreshCw,
   LogOut,
   ArrowLeft,
+  Key,
+  ShieldCheck,
+  Eye,
+  EyeOff,
+  Pencil,
+  Sparkles,
+  Clock,
+  MapPin,
+  Gift,
+  FileText,
+  Image as ImageIcon,
 } from 'lucide-react';
 
 interface AdminDashboardProps {
@@ -71,7 +89,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [supabaseUrl, setSupabaseUrl] = useState('');
   const [supabaseKey, setSupabaseKey] = useState('');
   const [copiedSql, setCopiedSql] = useState(false);
+  const [testingSupabase, setTestingSupabase] = useState(false);
+  const [seedingSupabase, setSeedingSupabase] = useState(false);
+  const [supabaseTestStatus, setSupabaseTestStatus] = useState<any>(null);
   const isConnected = isSupabaseConfigured();
+
+  // Admin Secret Key states
+  const [adminSecretKey, setAdminSecretKeyLocal] = useState('');
+  const [newSecretKeyInput, setNewSecretKeyInput] = useState('');
+  const [showSecretKey, setShowSecretKey] = useState(false);
+  const [copiedKey, setCopiedKey] = useState(false);
 
   // New Product Modal
   const [showAddProductModal, setShowAddProductModal] = useState(false);
@@ -81,6 +108,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [newProdDesc, setNewProdDesc] = useState('');
   const [newProdImg, setNewProdImg] = useState('');
   const [newProdBadge, setNewProdBadge] = useState('');
+
+  // Edit Product Modal
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [editProdName, setEditProdName] = useState('');
+  const [editProdCategory, setEditProdCategory] = useState('Classic Cakes');
+  const [editProdPrice, setEditProdPrice] = useState('');
+  const [editProdDesc, setEditProdDesc] = useState('');
+  const [editProdImg, setEditProdImg] = useState('');
+  const [editProdBadge, setEditProdBadge] = useState('');
 
   // Load all admin data
   const loadData = async () => {
@@ -108,15 +144,18 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     const cfg = getStoredSupabaseConfig();
     setSupabaseUrl(cfg.url);
     setSupabaseKey(cfg.anonKey);
+    const activeKey = getAdminSecretKey();
+    setAdminSecretKeyLocal(activeKey);
+    setNewSecretKeyInput(activeKey);
   }, []);
 
-  // Order status actions
-  const handleStatusChange = async (orderId: string, newStatus: string) => {
-    await updateOrderStatus(orderId, newStatus);
+  // Order status actions with live database tracking step sync
+  const handleStatusChange = async (orderId: string, newStatus: string, step?: number) => {
+    await updateOrderStatus(orderId, newStatus, step);
     setOrders((prev) =>
-      prev.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o))
+      prev.map((o) => (o.id === orderId ? { ...o, status: newStatus, trackingStep: step ?? o.trackingStep } : o))
     );
-    onShowToast(`Order #${orderId} marked as "${newStatus}"`);
+    onShowToast(`Order #${orderId} marked as "${newStatus}" and synced to Supabase!`);
   };
 
   const handleDeleteOrder = async (orderId: string) => {
@@ -162,6 +201,37 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     if (onProductsUpdated) onProductsUpdated();
   };
 
+  const handleOpenEditProduct = (p: Product) => {
+    setEditingProduct(p);
+    setEditProdName(p.name);
+    setEditProdCategory(p.category);
+    setEditProdPrice(String(p.price));
+    setEditProdDesc(p.description);
+    setEditProdImg(p.image);
+    setEditProdBadge(p.badge || '');
+  };
+
+  const handleSaveEditProduct = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingProduct || !editProdName.trim() || !editProdPrice) return;
+
+    const updatedProd: Product = {
+      ...editingProduct,
+      name: editProdName.trim(),
+      category: editProdCategory,
+      price: Number(editProdPrice),
+      description: editProdDesc.trim() || 'Delicious freshly baked treat made at Sweet Crumbs.',
+      image: editProdImg.trim() || editingProduct.image,
+      badge: editProdBadge ? editProdBadge : null,
+    };
+
+    await saveProduct(updatedProd);
+    setProducts((prev) => prev.map((p) => (p.id === updatedProd.id ? updatedProd : p)));
+    setEditingProduct(null);
+    onShowToast(`Product "${updatedProd.name}" updated & permanently saved to database!`);
+    if (onProductsUpdated) onProductsUpdated();
+  };
+
   // Review moderation
   const handleDeleteReview = async (id: number) => {
     await deleteReview(id);
@@ -191,6 +261,66 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     setCopiedSql(true);
     onShowToast('Supabase SQL Schema script copied to clipboard!');
     setTimeout(() => setCopiedSql(false), 2500);
+  };
+
+  const handleTestSupabase = async () => {
+    setTestingSupabase(true);
+    setSupabaseTestStatus(null);
+    try {
+      const res = await testSupabaseConnection(supabaseUrl, supabaseKey);
+      setSupabaseTestStatus(res);
+      onShowToast(res.message);
+    } catch (e: any) {
+      setSupabaseTestStatus({
+        success: false,
+        message: e.message || 'Error testing Supabase connection',
+        tables: { products: false, orders: false, reviews: false, contact_messages: false },
+      });
+    } finally {
+      setTestingSupabase(false);
+    }
+  };
+
+  const handleSeedSupabase = async () => {
+    setSeedingSupabase(true);
+    try {
+      const res = await seedDefaultProductsToSupabase();
+      onShowToast(res.message);
+      if (res.success) {
+        loadData();
+        if (onProductsUpdated) onProductsUpdated();
+      }
+    } catch (e: any) {
+      onShowToast(`Seeding failed: ${e.message}`);
+    } finally {
+      setSeedingSupabase(false);
+    }
+  };
+
+  // Secret Key actions
+  const handleUpdateSecretKey = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newSecretKeyInput.trim()) {
+      onShowToast('Secret key cannot be empty');
+      return;
+    }
+    setAdminSecretKey(newSecretKeyInput.trim());
+    setAdminSecretKeyLocal(newSecretKeyInput.trim());
+    onShowToast('Admin secret key updated successfully!');
+  };
+
+  const handleResetSecretKey = () => {
+    setAdminSecretKey(DEFAULT_ADMIN_SECRET_KEY);
+    setAdminSecretKeyLocal(DEFAULT_ADMIN_SECRET_KEY);
+    setNewSecretKeyInput(DEFAULT_ADMIN_SECRET_KEY);
+    onShowToast('Admin secret key reset to default.');
+  };
+
+  const handleCopySecretKey = () => {
+    navigator.clipboard.writeText(adminSecretKey);
+    setCopiedKey(true);
+    onShowToast('Admin secret key copied to clipboard!');
+    setTimeout(() => setCopiedKey(false), 2000);
   };
 
   // Analytics Metrics
@@ -477,6 +607,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                           Fulfillment ({order.deliveryMethod === 'delivery' ? 'Home Delivery' : 'Store Pickup'})
                         </p>
                         <p className="text-white">{order.address}</p>
+                        {order.deliveryTimeSlot && (
+                          <p className="text-[#DE9344] text-[11px] font-semibold flex items-center gap-1 mt-1">
+                            <Clock size={12} />
+                            <span>Slot: {order.deliveryTimeSlot}</span>
+                          </p>
+                        )}
                       </div>
 
                       <div className="space-y-1">
@@ -492,6 +628,31 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         )}
                       </div>
                     </div>
+
+                    {/* Baker's Notes & Dedication Gift Card if present */}
+                    {(order.giftMessage || order.orderNotes) && (
+                      <div className="bg-[#1b0b07] p-3 rounded-lg border border-[#3d1e15] text-xs space-y-2">
+                        {order.giftMessage && (
+                          <div className="space-y-0.5">
+                            <span className="text-[10px] uppercase font-bold text-[#DE9344] flex items-center gap-1">
+                              <Gift size={12} />
+                              <span>Dedication Card Message:</span>
+                            </span>
+                            <p className="text-white italic bg-[#24120d] p-2 rounded border border-[#4a261a]">
+                              "{order.giftMessage}"
+                            </p>
+                          </div>
+                        )}
+                        {order.orderNotes && (
+                          <div className="space-y-0.5 text-[#C8B8AB]">
+                            <span className="text-[10px] uppercase font-bold text-[#a88a6d] block">
+                              Baker's Instructions:
+                            </span>
+                            <p className="text-white">{order.orderNotes}</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
 
                     <div className="bg-[#1e0e0a] p-3 rounded-lg border border-[#331a12]">
                       <p className="font-bold text-[11px] text-[#a88a6d] uppercase tracking-wider mb-2">
@@ -511,35 +672,51 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       </div>
                     </div>
 
-                    <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
-                      <span className="text-xs text-[#a88a6d]">Update Kitchen/Delivery Status:</span>
-                      <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-[#331a12]">
+                      <span className="text-xs text-[#a88a6d] flex items-center gap-1">
+                        <Sparkles size={12} className="text-[#DE9344]" />
+                        <span>Update Real-Time Tracking Status:</span>
+                      </span>
+                      <div className="flex flex-wrap gap-1.5">
                         <button
-                          onClick={() => handleStatusChange(order.id, 'Being Prepared')}
-                          className="px-3 py-1 rounded bg-[#3a1d14] hover:bg-[#4d281c] text-xs font-semibold text-amber-300 transition-colors cursor-pointer"
+                          onClick={() => handleStatusChange(order.id, 'Order Confirmed', 1)}
+                          className="px-2.5 py-1 rounded bg-[#331a12] hover:bg-[#4d281c] text-[11px] font-semibold text-gray-300 transition-colors cursor-pointer"
                         >
-                          Being Prepared
+                          1. Confirmed
+                        </button>
+                        <button
+                          onClick={() => handleStatusChange(order.id, 'Being Prepared', 2)}
+                          className="px-2.5 py-1 rounded bg-[#3a1d14] hover:bg-[#4d281c] text-[11px] font-semibold text-amber-300 transition-colors cursor-pointer"
+                        >
+                          2. In Kitchen & Oven
+                        </button>
+                        <button
+                          onClick={() => handleStatusChange(order.id, 'Quality Checked', 3)}
+                          className="px-2.5 py-1 rounded bg-[#3a1d14] hover:bg-[#4d281c] text-[11px] font-semibold text-purple-300 transition-colors cursor-pointer"
+                        >
+                          3. QA Sealed
                         </button>
                         <button
                           onClick={() =>
                             handleStatusChange(
                               order.id,
-                              order.deliveryMethod === 'delivery' ? 'Out for Delivery' : 'Ready for Pickup'
+                              order.deliveryMethod === 'delivery' ? 'Out for Delivery' : 'Ready for Pickup',
+                              4
                             )
                           }
-                          className="px-3 py-1 rounded bg-[#3a1d14] hover:bg-[#4d281c] text-xs font-semibold text-blue-300 transition-colors cursor-pointer"
+                          className="px-2.5 py-1 rounded bg-[#1e293b] hover:bg-[#334155] text-[11px] font-semibold text-sky-300 transition-colors cursor-pointer"
                         >
-                          {order.deliveryMethod === 'delivery' ? 'Out for Delivery' : 'Ready for Pickup'}
+                          4. {order.deliveryMethod === 'delivery' ? 'Out for Delivery' : 'Ready for Pickup'}
                         </button>
                         <button
-                          onClick={() => handleStatusChange(order.id, 'Completed')}
-                          className="px-3 py-1 rounded bg-emerald-900/60 hover:bg-emerald-800 text-xs font-semibold text-emerald-300 transition-colors cursor-pointer"
+                          onClick={() => handleStatusChange(order.id, 'Completed', 5)}
+                          className="px-2.5 py-1 rounded bg-emerald-950 hover:bg-emerald-800 text-[11px] font-semibold text-emerald-300 transition-colors cursor-pointer"
                         >
-                          Completed
+                          5. Completed
                         </button>
                         <button
-                          onClick={() => handleStatusChange(order.id, 'Cancelled')}
-                          className="px-3 py-1 rounded bg-rose-950/60 hover:bg-rose-900 text-xs font-semibold text-rose-300 transition-colors cursor-pointer"
+                          onClick={() => handleStatusChange(order.id, 'Cancelled', 0)}
+                          className="px-2 py-1 rounded bg-rose-950/60 hover:bg-rose-900 text-[11px] font-semibold text-rose-300 transition-colors cursor-pointer"
                         >
                           Cancel
                         </button>
@@ -620,13 +797,22 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       )}
                     </div>
                   </div>
-                  <button
-                    onClick={() => handleDeleteProduct(p.id, p.name)}
-                    className="text-rose-400 hover:text-rose-200 p-1.5 rounded hover:bg-rose-950/40 transition-colors shrink-0 cursor-pointer"
-                    title="Delete product"
-                  >
-                    <Trash2 size={16} />
-                  </button>
+                  <div className="flex flex-col gap-1 shrink-0">
+                    <button
+                      onClick={() => handleOpenEditProduct(p)}
+                      className="text-amber-400 hover:text-amber-200 p-1.5 rounded hover:bg-amber-950/40 transition-colors cursor-pointer"
+                      title="Edit product details & photo"
+                    >
+                      <Pencil size={15} />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteProduct(p.id, p.name)}
+                      className="text-rose-400 hover:text-rose-200 p-1.5 rounded hover:bg-rose-950/40 transition-colors shrink-0 cursor-pointer"
+                      title="Delete product"
+                    >
+                      <Trash2 size={15} />
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -784,13 +970,52 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   </span>
                 </div>
 
-                <button
-                  type="submit"
-                  className="bg-[#d3213a] hover:bg-[#a8142b] text-white text-xs font-bold px-6 py-2.5 rounded-full transition-colors cursor-pointer"
-                >
-                  Save Supabase Credentials
-                </button>
+                <div className="flex flex-wrap items-center gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={handleTestSupabase}
+                    disabled={testingSupabase || !supabaseUrl.trim() || !supabaseKey.trim()}
+                    className="bg-[#3a1d14] hover:bg-[#4d281c] disabled:opacity-50 text-white text-xs font-bold px-5 py-2.5 rounded-full border border-[#522b1e] transition-colors cursor-pointer flex items-center gap-1.5"
+                  >
+                    <RefreshCw size={13} className={testingSupabase ? 'animate-spin' : ''} />
+                    <span>{testingSupabase ? 'Testing Connection...' : 'Test Connection'}</span>
+                  </button>
+
+                  <button
+                    type="submit"
+                    className="bg-[#d3213a] hover:bg-[#a8142b] text-white text-xs font-bold px-6 py-2.5 rounded-full transition-colors cursor-pointer"
+                  >
+                    Save Supabase Credentials
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleSeedSupabase}
+                    disabled={seedingSupabase || !isConnected}
+                    className="bg-[#DE9344] hover:bg-[#EEA858] disabled:opacity-40 text-[#20120D] text-xs font-bold px-5 py-2.5 rounded-full transition-colors cursor-pointer flex items-center gap-1.5 ml-auto"
+                  >
+                    <RefreshCw size={13} className={seedingSupabase ? 'animate-spin' : ''} />
+                    <span>{seedingSupabase ? 'Seeding...' : 'Seed 35 Products to Supabase'}</span>
+                  </button>
+                </div>
               </form>
+
+              {/* Live Test Results */}
+              {supabaseTestStatus && (
+                <div className={`mt-4 p-4 rounded-xl border text-xs space-y-2 ${
+                  supabaseTestStatus.success
+                    ? 'bg-emerald-950/40 border-emerald-500/40 text-emerald-200'
+                    : 'bg-red-950/40 border-red-500/40 text-red-200'
+                }`}>
+                  <div className="font-semibold">{supabaseTestStatus.message}</div>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] pt-1 border-t border-white/10">
+                    <div>products: {supabaseTestStatus.tables.products ? '✓ Ready' : '✗ Missing'}</div>
+                    <div>orders: {supabaseTestStatus.tables.orders ? '✓ Ready' : '✗ Missing'}</div>
+                    <div>reviews: {supabaseTestStatus.tables.reviews ? '✓ Ready' : '✗ Missing'}</div>
+                    <div>contact_messages: {supabaseTestStatus.tables.contact_messages ? '✓ Ready' : '✗ Missing'}</div>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* SQL Schema Copy Block */}
@@ -816,6 +1041,104 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               <pre className="bg-[#120704] p-4 rounded-xl text-[11px] font-mono text-[#d6c4ac] overflow-x-auto max-h-72 border border-[#2e1710]">
                 {SUPABASE_SCHEMA_SQL}
               </pre>
+            </div>
+
+            {/* Admin Access & Secret Key Control */}
+            <div className="bg-[#24120d] p-6 rounded-2xl border border-[#3d1e15] space-y-5">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h4 className="font-display text-lg font-bold text-white flex items-center gap-2">
+                    <Key size={18} className="text-[#DE9344]" />
+                    <span>Admin Security & Secret Key Gateway</span>
+                  </h4>
+                  <p className="text-xs text-[#a88a6d] mt-1">
+                    Manage the private key required to unlock this administration panel. All customer portals remain invisible to the public.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] px-3 py-1 rounded-full bg-emerald-950/70 border border-emerald-800 text-emerald-300 font-medium flex items-center gap-1.5">
+                    <ShieldCheck size={13} />
+                    <span>Protected Gateway</span>
+                  </span>
+                </div>
+              </div>
+
+              {/* Current Key Display & Actions */}
+              <div className="bg-[#1b0b07] p-4 rounded-xl border border-[#381a12] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <span className="text-[10px] uppercase tracking-wider text-[#9C8578] font-bold block">
+                    Current Active Secret Key
+                  </span>
+                  <div className="font-mono text-sm font-bold text-[#DE9344] tracking-wide flex items-center gap-2">
+                    <span>{showSecretKey ? adminSecretKey : '••••••••••••••••••••'}</span>
+                    <button
+                      type="button"
+                      onClick={() => setShowSecretKey(!showSecretKey)}
+                      className="text-[#9C8578] hover:text-white transition-colors cursor-pointer"
+                      title={showSecretKey ? 'Mask key' : 'Reveal key'}
+                    >
+                      {showSecretKey ? <EyeOff size={14} /> : <Eye size={14} />}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    type="button"
+                    onClick={handleCopySecretKey}
+                    className="bg-[#30160d] hover:bg-[#432014] text-[#FAF6F0] text-xs font-semibold px-3.5 py-2 rounded-lg border border-[#4d281c] flex items-center gap-1.5 transition-colors cursor-pointer"
+                  >
+                    {copiedKey ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
+                    <span>{copiedKey ? 'Copied' : 'Copy Key'}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleResetSecretKey}
+                    className="bg-[#30160d] hover:bg-[#432014] text-[#C8B8AB] hover:text-white text-xs font-semibold px-3 py-2 rounded-lg border border-[#4d281c] transition-colors cursor-pointer"
+                    title="Reset to default key"
+                  >
+                    Reset Default
+                  </button>
+                </div>
+              </div>
+
+              {/* Change Secret Key Form */}
+              <form onSubmit={handleUpdateSecretKey} className="space-y-3 pt-1">
+                <label className="block text-xs font-semibold text-white">
+                  Update Admin Secret Key
+                </label>
+                <div className="flex flex-col sm:flex-row gap-2.5">
+                  <input
+                    type="text"
+                    required
+                    value={newSecretKeyInput}
+                    onChange={(e) => setNewSecretKeyInput(e.target.value)}
+                    placeholder="Enter new secret key or passphrase..."
+                    className="flex-1 text-xs px-3.5 py-2.5 rounded-lg bg-[#1e0e0a] border border-[#4a261a] text-white focus:outline-hidden focus:border-[#d3213a]"
+                  />
+                  <button
+                    type="submit"
+                    className="bg-[#d3213a] hover:bg-[#a8142b] text-white text-xs font-bold px-6 py-2.5 rounded-lg transition-colors cursor-pointer shrink-0"
+                  >
+                    Save New Secret Key
+                  </button>
+                </div>
+              </form>
+
+              {/* Secret Admin Portal Instructions */}
+              <div className="bg-[#120704] p-4 rounded-xl border border-[#2e1710] text-xs space-y-2">
+                <span className="font-bold text-[#DE9344] uppercase tracking-wider text-[11px] block">
+                  Staff Only · How to access the hidden Admin Portal
+                </span>
+                <p className="text-[#a88a6d] leading-relaxed text-[11px]">
+                  The customer storefront intentionally conceals all administrative links so customers cannot stumble upon this panel. Authorized staff can access it via three secret methods:
+                </p>
+                <ul className="list-disc list-inside text-[11px] text-[#C8B8AB] space-y-1 pl-1">
+                  <li><strong className="text-white">URL Hash:</strong> Append <code className="text-[#DE9344] bg-[#20120D] px-1.5 py-0.5 rounded">#admin</code> or <code className="text-[#DE9344] bg-[#20120D] px-1.5 py-0.5 rounded">#portal</code> to the bakery website address.</li>
+                  <li><strong className="text-white">Keyboard Shortcut:</strong> Press <code className="text-[#DE9344] bg-[#20120D] px-1.5 py-0.5 rounded">Ctrl + Shift + A</code> (or <code className="text-[#DE9344] bg-[#20120D] px-1.5 py-0.5 rounded">Cmd + Shift + A</code>) anywhere on the customer storefront.</li>
+                  <li><strong className="text-white">Discreet Click:</strong> Click the copyright line at the very bottom of the footer three (3) consecutive times in quick succession.</li>
+                </ul>
+              </div>
             </div>
           </div>
         )}
@@ -924,6 +1247,182 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   className="px-4 py-2 rounded text-xs font-bold bg-[#d3213a] hover:bg-[#a8142b] text-white cursor-pointer"
                 >
                   Save Product
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Product & Photo Modal */}
+      {editingProduct && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-[#24120d] border border-[#4a261a] rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl space-y-5 max-h-[92vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-[#3d1e15]">
+              <div>
+                <h3 className="font-display text-xl font-bold text-white flex items-center gap-2">
+                  <Pencil size={18} className="text-[#DE9344]" />
+                  <span>Edit Product & Photo</span>
+                </h3>
+                <p className="text-xs text-[#a88a6d]">
+                  Changes are permanently saved to database and won't vanish after refresh.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEditingProduct(null)}
+                className="p-1.5 rounded-full text-[#a88a6d] hover:text-white hover:bg-[#331a12] transition-colors cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEditProduct} className="space-y-4">
+              {/* Live Photo Preview */}
+              <div className="bg-[#1b0b07] p-4 rounded-2xl border border-[#3d1e15] space-y-3">
+                <span className="text-[10px] uppercase font-bold tracking-wider text-[#DE9344] block">
+                  Product Image & Live Preview
+                </span>
+                <div className="flex items-center gap-4">
+                  <div className="relative w-24 h-24 rounded-2xl overflow-hidden bg-[#24120d] border-2 border-[#4a261a] shrink-0 shadow-md">
+                    <img
+                      src={editProdImg || editingProduct.image}
+                      alt={editProdName}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=300&q=80';
+                      }}
+                    />
+                  </div>
+                  <div className="flex-1 space-y-1">
+                    <label className="block text-xs font-semibold text-white">
+                      Image URL / Photo Link *
+                    </label>
+                    <input
+                      type="url"
+                      required
+                      value={editProdImg}
+                      onChange={(e) => setEditProdImg(e.target.value)}
+                      placeholder="https://images.unsplash.com/..."
+                      className="w-full text-xs px-3 py-2 rounded-lg bg-[#140805] border border-[#4a261a] text-white focus:outline-hidden focus:border-[#d3213a]"
+                    />
+                    <span className="text-[10px] text-[#8a6e54] block">
+                      Paste any high-resolution image URL or pick a quick bakery preset below:
+                    </span>
+                  </div>
+                </div>
+
+                {/* Quick Photo Presets */}
+                <div className="pt-2 border-t border-[#331a12] space-y-1.5">
+                  <span className="text-[10px] text-[#a88a6d] block font-medium">Quick Photo Presets:</span>
+                  <div className="flex flex-wrap gap-1.5 text-[10px]">
+                    {[
+                      { label: 'Chocolate Cake', url: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=600&q=80' },
+                      { label: 'Strawberry Cake', url: 'https://images.unsplash.com/photo-1611293388250-580b08c4a145?auto=format&fit=crop&w=600&q=80' },
+                      { label: 'Ube Halaya', url: 'https://images.unsplash.com/photo-1640839954789-ca0049648b18?auto=format&fit=crop&w=600&q=80' },
+                      { label: 'Doughnut', url: 'https://images.unsplash.com/photo-1551024506-0bccd828d307?auto=format&fit=crop&w=600&q=80' },
+                      { label: 'Croissant', url: 'https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&w=600&q=80' },
+                      { label: 'Cookie', url: 'https://images.unsplash.com/photo-1499636136210-6f4ee915583e?auto=format&fit=crop&w=600&q=80' },
+                      { label: 'Cupcake', url: 'https://images.unsplash.com/photo-1614707267537-b85aaf00c4b7?auto=format&fit=crop&w=600&q=80' },
+                      { label: 'Iced Latte', url: 'https://images.unsplash.com/photo-1517701604599-bb29b565090c?auto=format&fit=crop&w=600&q=80' },
+                    ].map((pre) => (
+                      <button
+                        key={pre.label}
+                        type="button"
+                        onClick={() => setEditProdImg(pre.url)}
+                        className="px-2 py-1 rounded bg-[#2a130c] hover:bg-[#3d1d13] text-[#DE9344] border border-[#4d281c] transition-colors cursor-pointer"
+                      >
+                        {pre.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-white mb-1">Product Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={editProdName}
+                  onChange={(e) => setEditProdName(e.target.value)}
+                  className="w-full text-xs px-3.5 py-2.5 rounded-lg bg-[#1e0e0a] border border-[#4a261a] text-white focus:outline-hidden focus:border-[#d3213a]"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-white mb-1">Category</label>
+                  <select
+                    value={editProdCategory}
+                    onChange={(e) => setEditProdCategory(e.target.value)}
+                    className="w-full text-xs px-3 py-2 rounded-lg bg-[#1e0e0a] border border-[#4a261a] text-white focus:outline-hidden"
+                  >
+                    <option value="Classic Cakes">Classic Cakes</option>
+                    <option value="Specialty Cakes">Specialty Cakes</option>
+                    <option value="Coffee">Coffee</option>
+                    <option value="Iced Coffee">Iced Coffee</option>
+                    <option value="Classic Doughnuts">Classic Doughnuts</option>
+                    <option value="Specialty Doughnuts">Specialty Doughnuts</option>
+                    <option value="Cupcakes">Cupcakes</option>
+                    <option value="Cookies">Cookies</option>
+                    <option value="Bread & Pastries">Bread & Pastries</option>
+                    <option value="Hot Chocolate">Hot Chocolate</option>
+                    <option value="Tea">Tea</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-white mb-1">Price (₱) *</label>
+                  <input
+                    type="number"
+                    required
+                    min={1}
+                    value={editProdPrice}
+                    onChange={(e) => setEditProdPrice(e.target.value)}
+                    className="w-full text-xs px-3 py-2 rounded-lg bg-[#1e0e0a] border border-[#4a261a] text-white focus:outline-hidden"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-white mb-1">Description</label>
+                <textarea
+                  rows={3}
+                  value={editProdDesc}
+                  onChange={(e) => setEditProdDesc(e.target.value)}
+                  className="w-full text-xs px-3.5 py-2 rounded-lg bg-[#1e0e0a] border border-[#4a261a] text-white focus:outline-hidden"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-white mb-1">Badge (Promotional)</label>
+                <select
+                  value={editProdBadge}
+                  onChange={(e) => setEditProdBadge(e.target.value)}
+                  className="w-full text-xs px-3 py-2 rounded-lg bg-[#1e0e0a] border border-[#4a261a] text-white focus:outline-hidden"
+                >
+                  <option value="">None</option>
+                  <option value="bestseller">Bestseller</option>
+                  <option value="featured">Featured</option>
+                  <option value="today's special">Today's Special</option>
+                  <option value="new">New</option>
+                </select>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-3 border-t border-[#3d1e15]">
+                <button
+                  type="button"
+                  onClick={() => setEditingProduct(null)}
+                  className="px-4 py-2.5 rounded-lg text-xs text-[#a88a6d] hover:bg-[#331a12] cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2.5 rounded-lg text-xs font-bold bg-[#d3213a] hover:bg-[#a8142b] text-white shadow-md cursor-pointer"
+                >
+                  Save & Persist Changes
                 </button>
               </div>
             </form>

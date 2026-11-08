@@ -29,6 +29,9 @@ export interface Order {
   customerPhone: string;
   deliveryMethod: string;
   address: string;
+  deliveryTimeSlot?: string;
+  orderNotes?: string;
+  giftMessage?: string;
   paymentMethod: string;
   paymentReference?: string | null;
   items: CartItem[];
@@ -37,7 +40,9 @@ export interface Order {
   discount: number;
   total: number;
   status: string;
+  trackingStep?: number;
   createdAt: string;
+  updatedAt?: string;
 }
 
 export interface Review {

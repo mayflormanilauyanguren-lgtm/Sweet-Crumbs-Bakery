@@ -1,12 +1,31 @@
 import React from 'react';
-import { Lock, MapPin, Phone, Mail, Clock, Heart } from 'lucide-react';
+import { MapPin, Phone, Mail, Clock, Heart } from 'lucide-react';
 
 interface FooterProps {
-  onStaffPortalClick?: () => void;
   onNavigate?: (page: string) => void;
+  onSecretPortalTrigger?: () => void;
 }
 
-export const Footer: React.FC<FooterProps> = ({ onStaffPortalClick, onNavigate }) => {
+export const Footer: React.FC<FooterProps> = ({
+  onNavigate,
+  onSecretPortalTrigger,
+}) => {
+  const [clickCount, setClickCount] = React.useState(0);
+
+  const handleSecretClick = () => {
+    setClickCount((prev) => {
+      const next = prev + 1;
+      if (next >= 3) {
+        if (onSecretPortalTrigger) onSecretPortalTrigger();
+        return 0;
+      }
+      return next;
+    });
+
+    setTimeout(() => {
+      setClickCount(0);
+    }, 1500);
+  };
   return (
     <footer className="bg-[#20120D] text-[#FAF7F2] pt-16 pb-12 border-t border-[#341F16]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -130,24 +149,22 @@ export const Footer: React.FC<FooterProps> = ({ onStaffPortalClick, onNavigate }
 
         {/* Bottom Utility Bar */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#9C8578]">
-          <p className="flex items-center gap-1">
+          <p
+            onClick={handleSecretClick}
+            className="flex items-center gap-1 cursor-default select-none"
+            title=""
+          >
             <span>© {new Date().getFullYear()} Sweet Crumbs Bakery. Made with</span>
             <Heart size={12} className="text-[#B81D24] fill-current" />
             <span>in Davao City.</span>
           </p>
 
-          <div className="flex items-center gap-6">
-            <span className="hidden sm:inline">Supabase Powered · 100% Real Butter</span>
-            {onStaffPortalClick && (
-              <button
-                onClick={onStaffPortalClick}
-                className="text-[11px] text-[#745C51] hover:text-[#DE9344] flex items-center gap-1.5 transition-colors cursor-pointer py-1 px-2 rounded-sm hover:bg-[#341F16]"
-                title="Bakery Staff Access"
-              >
-                <Lock size={12} />
-                <span>Staff Portal</span>
-              </button>
-            )}
+          <div className="flex items-center gap-4 text-[11px] text-[#745C51]">
+            <span>100% Real Dairy Butter</span>
+            <span>•</span>
+            <span>Artisan Small-Batch Craft</span>
+            <span>•</span>
+            <span>All Rights Reserved</span>
           </div>
         </div>
       </div>

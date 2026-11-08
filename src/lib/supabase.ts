@@ -27,6 +27,142 @@ export function getStoredSupabaseConfig(): SupabaseConfig {
   };
 }
 
+export interface SupabaseTestResult {
+  success: boolean;
+  message: string;
+  tables: {
+    products: boolean;
+    orders: boolean;
+    reviews: boolean;
+    contact_messages: boolean;
+  };
+  latencyMs?: number;
+}
+
+export function resetSupabaseConfig(): void {
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+    supabaseClient = initClient('', '');
+  } catch {}
+}
+
+export async function testSupabaseConnection(
+  testUrl?: string,
+  testKey?: string
+): Promise<SupabaseTestResult> {
+  const cfg = getStoredSupabaseConfig();
+  const url = (testUrl || cfg.url || '').trim().replace(/\/+$/, '');
+  const key = (testKey || cfg.anonKey || '').trim();
+
+  if (!url || !key || !url.startsWith('https://')) {
+    return {
+      success: false,
+      message: 'Please provide a valid Supabase Project URL (https://xyz.supabase.co) and Anon Public Key.',
+      tables: { products: false, orders: false, reviews: false, contact_messages: false },
+    };
+  }
+
+  const client = initClient(url, key);
+  const startTime = performance.now();
+
+  const tables = {
+    products: false,
+    orders: false,
+    reviews: false,
+    contact_messages: false,
+  };
+
+  try {
+    const { error: prodErr } = await client.from('products').select('id').limit(1);
+    tables.products = !prodErr;
+
+    const { error: ordErr } = await client.from('orders').select('id').limit(1);
+    tables.orders = !ordErr;
+
+    const { error: revErr } = await client.from('reviews').select('id').limit(1);
+    tables.reviews = !revErr;
+
+    const { error: msgErr } = await client.from('contact_messages').select('id').limit(1);
+    tables.contact_messages = !msgErr;
+
+    const latencyMs = Math.round(performance.now() - startTime);
+    const allReady = tables.products && tables.orders && tables.reviews && tables.contact_messages;
+
+    if (allReady) {
+      return {
+        success: true,
+        message: `Successfully connected to Supabase in ${latencyMs}ms! All 4 database tables are verified.`,
+        tables,
+        latencyMs,
+      };
+    }
+
+    if (!tables.products && !tables.orders && !tables.reviews && !tables.contact_messages) {
+      return {
+        success: false,
+        message: 'Connected to Supabase project, but database tables do not exist yet. Please run the SQL schema script in your Supabase SQL Editor.',
+        tables,
+        latencyMs,
+      };
+    }
+
+    return {
+      success: true,
+      message: `Connected to Supabase in ${latencyMs}ms, but some tables are missing. Please run the full SQL schema script.`,
+      tables,
+      latencyMs,
+    };
+  } catch (err: any) {
+    return {
+      success: false,
+      message: `Connection failed: ${err.message || 'Network error connecting to Supabase.'}`,
+      tables,
+    };
+  }
+}
+
+export async function seedDefaultProductsToSupabase(
+  customProducts?: any[]
+): Promise<{ success: boolean; count: number; message: string }> {
+  const client = getSupabase();
+  const list = customProducts || (await import('./dataService.ts')).DEFAULT_PRODUCTS;
+
+  try {
+    const formatted = list.map((p: any) => ({
+      id: p.id,
+      name: p.name,
+      category: p.category,
+      price: p.price,
+      rating: p.rating || 5,
+      reviews_count: p.reviewsCount || 0,
+      description: p.description,
+      image: p.image,
+      badge: p.badge || null,
+    }));
+
+    const { error } = await client.from('products').upsert(formatted);
+    if (error) {
+      return {
+        success: false,
+        count: 0,
+        message: `Failed to seed products: ${error.message}. Make sure the 'products' table exists with RLS policy.`,
+      };
+    }
+
+    return {
+      success: true,
+      count: formatted.length,
+      message: `Successfully seeded ${formatted.length} artisan bakery products to Supabase!`,
+    };
+  } catch (err: any) {
+    return {
+      success: false,
+      count: 0,
+      message: `Error seeding products: ${err.message}`,
+    };
+  }
+}
+
 export function saveSupabaseConfig(url: string, anonKey: string) {
   const cleanUrl = url.trim().replace(/\/+$/, '');
   const cleanKey = anonKey.trim();
@@ -94,6 +230,9 @@ CREATE TABLE IF NOT EXISTS public.orders (
   customer_phone text NOT NULL,
   delivery_method text NOT NULL,
   address text NOT NULL,
+  delivery_time_slot text,
+  order_notes text,
+  gift_message text,
   payment_method text NOT NULL,
   payment_reference text,
   items jsonb NOT NULL,
@@ -102,7 +241,9 @@ CREATE TABLE IF NOT EXISTS public.orders (
   discount integer NOT NULL,
   total integer NOT NULL,
   status text DEFAULT 'Order Confirmed' NOT NULL,
-  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
+  tracking_step integer DEFAULT 1,
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
+  updated_at timestamp with time zone DEFAULT timezone('utc'::text, now())
 );
 
 -- 3. Reviews table
@@ -132,6 +273,10 @@ ALTER TABLE public.contact_messages ENABLE ROW LEVEL SECURITY;
 
 -- Allow public read on products and reviews
 CREATE POLICY "Public products viewable" ON public.products FOR SELECT USING (true);
+CREATE POLICY "Public products insertable" ON public.products FOR INSERT WITH CHECK (true);
+CREATE POLICY "Public products updateable" ON public.products FOR UPDATE USING (true);
+CREATE POLICY "Public products deleteable" ON public.products FOR DELETE USING (true);
+
 CREATE POLICY "Public reviews viewable" ON public.reviews FOR SELECT USING (true);
 CREATE POLICY "Public reviews insertable" ON public.reviews FOR INSERT WITH CHECK (true);
 
@@ -139,8 +284,12 @@ CREATE POLICY "Public reviews insertable" ON public.reviews FOR INSERT WITH CHEC
 CREATE POLICY "Public orders insertable" ON public.orders FOR INSERT WITH CHECK (true);
 CREATE POLICY "Public orders viewable" ON public.orders FOR SELECT USING (true);
 CREATE POLICY "Public orders updateable" ON public.orders FOR UPDATE USING (true);
+CREATE POLICY "Public orders deleteable" ON public.orders FOR DELETE USING (true);
 
 CREATE POLICY "Public contact insertable" ON public.contact_messages FOR INSERT WITH CHECK (true);
 CREATE POLICY "Public contact viewable" ON public.contact_messages FOR SELECT USING (true);
 CREATE POLICY "Public contact updateable" ON public.contact_messages FOR UPDATE USING (true);
+
+-- Realtime support
+ALTER TABLE public.orders REPLICA IDENTITY FULL;
 `;

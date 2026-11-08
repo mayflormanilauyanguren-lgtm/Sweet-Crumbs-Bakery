@@ -54,7 +54,7 @@ function MainApp() {
 
   // Admin access state
   const [isAdminView, setIsAdminView] = useState<boolean>(() => {
-    return window.location.hash === '#admin';
+    return window.location.hash === '#admin' || window.location.hash === '#portal';
   });
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState<boolean>(() => {
     return sessionStorage.getItem('sc_admin_authenticated') === 'true';
@@ -87,6 +87,7 @@ function MainApp() {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isWishlistOpen, setIsWishlistOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [instantCheckoutItem, setInstantCheckoutItem] = useState<CartItem | null>(null);
   const [isTrackingOpen, setIsTrackingOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [confirmedOrder, setConfirmedOrder] = useState<Order | null>(null);
@@ -128,11 +129,11 @@ function MainApp() {
     }, 3200);
   };
 
-  // Sync hash changes for #admin
+  // Sync hash changes and secret keyboard shortcuts for Admin Portal
   useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash;
-      if (hash === '#admin') {
+      if (hash === '#admin' || hash === '#portal') {
         setIsAdminView(true);
       } else {
         setIsAdminView(false);
@@ -143,8 +144,28 @@ function MainApp() {
       }
     };
 
+    // Secret keyboard shortcut for bakery staff: Ctrl + Shift + A (or Cmd + Shift + A)
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'A' || e.key === 'a')) {
+        e.preventDefault();
+        setIsAdminView((prev) => {
+          const next = !prev;
+          if (next) {
+            window.location.hash = '#admin';
+          } else {
+            window.location.hash = '';
+          }
+          return next;
+        });
+      }
+    };
+
     window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('hashchange', handleHashChange);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
   }, []);
 
   // Load products and reviews via Supabase dataService
@@ -200,6 +221,20 @@ function MainApp() {
       ];
     });
     showToast(`${qtyToAdd > 1 ? `${qtyToAdd} × ` : ''}${product.name} added to cart!`);
+  };
+
+  // Express Instant Checkout (Direct purchase without keeping in cart)
+  const handleInstantCheckout = (product: Product, quantityToAdd: number = 1) => {
+    const qtyToAdd = Math.max(1, quantityToAdd);
+    const item: CartItem = {
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      qty: qtyToAdd,
+      img: product.image,
+    };
+    setInstantCheckoutItem(item);
+    setIsCheckoutOpen(true);
   };
 
   const handleUpdateCartQty = (index: number, newQty: number) => {
@@ -355,6 +390,19 @@ function MainApp() {
     });
     showToast(`${spec.name} added to cart with 15% savings!`);
     setIsCartOpen(true);
+  };
+
+  const handleInstantOrderSpecial = (spec: typeof dailySpecials.strawberry) => {
+    const item: CartItem = {
+      id: spec.id,
+      name: spec.name,
+      price: spec.specialPrice,
+      qty: 1,
+      img: spec.image,
+      meta: `Today's Special (15% Off Reg. ₱${spec.originalPrice.toLocaleString()})`,
+    };
+    setInstantCheckoutItem(item);
+    setIsCheckoutOpen(true);
   };
 
   // Review submission
@@ -1881,6 +1929,7 @@ function MainApp() {
                     isInWishlist={wishlistIds.includes(p.id)}
                     onToggleWishlist={handleToggleWishlist}
                     onAddToCart={handleAddToCart}
+                    onInstantCheckout={handleInstantCheckout}
                     onSelectProduct={(product) => setSelectedProductModal(product)}
                   />
                 ))}
@@ -2539,18 +2588,26 @@ function MainApp() {
         isInWishlist={selectedProductModal ? wishlistIds.includes(selectedProductModal.id) : false}
         onToggleWishlist={handleToggleWishlist}
         onAddToCart={handleAddToCart}
+        onInstantCheckout={handleInstantCheckout}
         onShowToast={showToast}
       />
 
       {/* Checkout Modal */}
       <CheckoutModal
         isOpen={isCheckoutOpen}
-        onClose={() => setIsCheckoutOpen(false)}
+        onClose={() => {
+          setIsCheckoutOpen(false);
+          setInstantCheckoutItem(null);
+        }}
         cart={cart}
+        directItem={instantCheckoutItem}
         appliedDiscount={appliedDiscount}
         onOrderPlaced={(order) => {
           setConfirmedOrder(order);
-          setCart([]);
+          if (!instantCheckoutItem) {
+            setCart([]);
+          }
+          setInstantCheckoutItem(null);
           setIsTrackingOpen(true);
         }}
         onShowToast={showToast}
@@ -2570,10 +2627,13 @@ function MainApp() {
         onShowToast={showToast}
       />
 
-      {/* Redesigned Footer with onNavigate and Staff Portal trigger */}
+      {/* Customer Footer with discreet 3-click secret administrator trigger */}
       <Footer
-        onStaffPortalClick={() => setIsAdminView(true)}
         onNavigate={navigateTo}
+        onSecretPortalTrigger={() => {
+          setIsAdminView(true);
+          window.location.hash = '#admin';
+        }}
       />
     </div>
   );
