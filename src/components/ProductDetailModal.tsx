@@ -15,7 +15,6 @@ import {
   MessageSquare,
   ThumbsUp,
   Share2,
-  Zap,
 } from 'lucide-react';
 import { createReview } from '../lib/dataService.ts';
 
@@ -26,7 +25,6 @@ interface ProductDetailModalProps {
   isInWishlist: boolean;
   onToggleWishlist: (product: Product) => void;
   onAddToCart: (product: Product, qty: number) => void;
-  onInstantCheckout?: (product: Product, qty: number) => void;
   onShowToast: (msg: string) => void;
 }
 
@@ -142,7 +140,6 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   isInWishlist,
   onToggleWishlist,
   onAddToCart,
-  onInstantCheckout,
   onShowToast,
 }) => {
   const [quantity, setQuantity] = useState<number>(1);
@@ -492,31 +489,15 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                   </div>
                 </div>
 
-                {/* Dual Action CTAs: Add to Bag or Instant Order */}
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
+                {/* Primary Add to Bag CTA */}
+                <div className="pt-2">
                   <button
                     type="button"
                     onClick={handleAddAndClose}
-                    className="flex-1 bg-[#FAF6F0] hover:bg-[#20120D] text-[#20120D] hover:text-white border-2 border-[#DECDBA] hover:border-[#20120D] font-bold text-xs sm:text-sm uppercase tracking-wider py-3.5 px-6 rounded-full transition-all duration-200 cursor-pointer flex items-center justify-center gap-2"
+                    className="w-full bg-[#20120D] hover:bg-[#A8181E] text-white font-bold text-xs sm:text-sm uppercase tracking-wider py-4 px-8 rounded-full shadow-md hover:shadow-xl transition-all duration-200 cursor-pointer flex items-center justify-center gap-2 hover:-translate-y-0.5"
                   >
-                    <ShoppingBag size={15} />
-                    <span>Keep In Bag</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (onInstantCheckout) {
-                        onInstantCheckout(product, quantity);
-                        onClose();
-                      } else {
-                        handleAddAndClose();
-                      }
-                    }}
-                    className="flex-1 bg-[#A8181E] hover:bg-[#851217] active:bg-[#680C10] text-white font-bold text-xs sm:text-sm uppercase tracking-wider py-3.5 px-6 rounded-full shadow-md hover:shadow-xl transition-all duration-200 cursor-pointer flex items-center justify-center gap-2 hover:-translate-y-0.5"
-                  >
-                    <Zap size={15} className="fill-current" />
-                    <span>Instant Order Now · ₱{(product.price * quantity).toLocaleString()}</span>
+                    <ShoppingBag size={16} />
+                    <span>Add to Bag · ₱{(product.price * quantity).toLocaleString()}</span>
                   </button>
                 </div>
               </div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Product,
   Order,
@@ -10,6 +10,7 @@ import {
   saveProduct,
   deleteProduct,
   fetchAllOrders,
+  syncOrderToSupabase,
   updateOrderStatus,
   deleteOrder,
   fetchReviews,
@@ -55,6 +56,8 @@ import {
   Gift,
   FileText,
   Image as ImageIcon,
+  X,
+  Upload,
 } from 'lucide-react';
 
 interface AdminDashboardProps {
@@ -118,6 +121,77 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [editProdImg, setEditProdImg] = useState('');
   const [editProdBadge, setEditProdBadge] = useState('');
 
+  // Photo upload refs & state
+  const editFileInputRef = useRef<HTMLInputElement>(null);
+  const newFileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+
+  // File upload reader with automatic optimization
+  const handlePhotoUpload = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    onSuccess: (dataUrl: string) => void
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      onShowToast('Please choose a valid image file (PNG, JPG, WEBP).');
+      return;
+    }
+
+    setUploadingPhoto(true);
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const result = event.target?.result as string;
+      if (!result) {
+        setUploadingPhoto(false);
+        return;
+      }
+
+      // If file is larger than 800KB, optimize with canvas to keep database fast
+      if (file.size > 800 * 1024) {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const maxDim = 1200;
+          let width = img.width;
+          let height = img.height;
+          if (width > height && width > maxDim) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          } else if (height > maxDim) {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx?.drawImage(img, 0, 0, width, height);
+          const compressed = canvas.toDataURL('image/jpeg', 0.88);
+          onSuccess(compressed);
+          setUploadingPhoto(false);
+          onShowToast('Photo uploaded from device successfully!');
+        };
+        img.onerror = () => {
+          onSuccess(result);
+          setUploadingPhoto(false);
+          onShowToast('Photo uploaded from device successfully!');
+        };
+        img.src = result;
+      } else {
+        onSuccess(result);
+        setUploadingPhoto(false);
+        onShowToast('Photo uploaded from device successfully!');
+      }
+    };
+    reader.onerror = () => {
+      setUploadingPhoto(false);
+      onShowToast('Could not read image file. Please try again.');
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+
   // Load all admin data
   const loadData = async () => {
     setLoading(true);
@@ -139,6 +213,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     }
   };
 
+  const [syncingOrders, setSyncingOrders] = useState(false);
+
   useEffect(() => {
     loadData();
     const cfg = getStoredSupabaseConfig();
@@ -148,6 +224,30 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     setAdminSecretKeyLocal(activeKey);
     setNewSecretKeyInput(activeKey);
   }, []);
+
+  // Real-time polling when viewing Orders tab so customer orders appear immediately
+  useEffect(() => {
+    if (activeTab !== 'orders') return;
+    const interval = setInterval(() => {
+      fetchAllOrders().then((fresh) => {
+        setOrders(fresh);
+      });
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [activeTab]);
+
+  const handleSyncOrders = async () => {
+    setSyncingOrders(true);
+    try {
+      const fresh = await fetchAllOrders();
+      setOrders(fresh);
+      onShowToast(`Refreshed and synced ${fresh.length} orders with Supabase!`);
+    } catch {
+      onShowToast('Could not refresh orders.');
+    } finally {
+      setTimeout(() => setSyncingOrders(false), 400);
+    }
+  };
 
   // Order status actions with live database tracking step sync
   const handleStatusChange = async (orderId: string, newStatus: string, step?: number) => {
@@ -504,6 +604,37 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         {/* ================= TAB: ORDERS ================= */}
         {activeTab === 'orders' && (
           <div className="space-y-6">
+            {/* Live Database Sync Status Toolbar */}
+            <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 sm:p-4 bg-[#24120d] rounded-2xl border border-[#3d1e15] shadow-xs">
+              <div className="flex items-center gap-3">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                      <Database size={13} className="text-[#DE9344]" />
+                      <span>Live Database Sync</span>
+                    </span>
+                    <span className="bg-[#381c13] text-[#DE9344] text-[10px] px-2 py-0.5 rounded-full font-bold">
+                      {orders.length} {orders.length === 1 ? 'Order' : 'Orders'} Total
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-[#a88a6d] mt-0.5">
+                    Orders auto-sync with Supabase and persistent local cache. Updates appear here in real-time.
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleSyncOrders}
+                disabled={syncingOrders}
+                className="bg-[#381c13] hover:bg-[#4a261a] text-[#ffe9c7] text-xs font-bold px-4 py-2 rounded-xl flex items-center gap-2 border border-[#522b1e] transition-colors cursor-pointer disabled:opacity-50 ml-auto"
+              >
+                <RefreshCw size={13} className={syncingOrders ? 'animate-spin text-[#DE9344]' : 'text-[#DE9344]'} />
+                <span>{syncingOrders ? 'Syncing...' : 'Sync & Refresh Orders'}</span>
+              </button>
+            </div>
+
             <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
               <div className="flex flex-wrap gap-2">
                 {[
@@ -1208,15 +1339,58 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-white mb-1">Image URL</label>
-                <input
-                  type="url"
-                  value={newProdImg}
-                  onChange={(e) => setNewProdImg(e.target.value)}
-                  placeholder="https://images.unsplash.com/..."
-                  className="w-full text-xs px-3 py-2 rounded bg-[#1e0e0a] border border-[#4a261a] text-white focus:outline-hidden"
-                />
+              <div className="bg-[#1b0b07] p-3.5 rounded-xl border border-[#3d1e15] space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-semibold text-white">Product Photo</label>
+                  {uploadingPhoto && (
+                    <span className="text-[10px] text-[#DE9344] animate-pulse font-semibold">
+                      Uploading...
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <div
+                    onClick={() => newFileInputRef.current?.click()}
+                    className="relative w-16 h-16 rounded-xl overflow-hidden bg-[#1e0e0a] border border-[#4a261a] hover:border-[#DE9344] shrink-0 shadow-sm cursor-pointer group"
+                    title="Click to select photo from device"
+                  >
+                    <img
+                      src={newProdImg || 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=300&q=80'}
+                      alt="New product preview"
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
+                      <Upload size={14} className="text-[#DE9344]" />
+                    </div>
+                  </div>
+
+                  <div className="flex-1 space-y-1.5">
+                    <input
+                      ref={newFileInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => handlePhotoUpload(e, (url) => setNewProdImg(url))}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => newFileInputRef.current?.click()}
+                      disabled={uploadingPhoto}
+                      className="bg-[#DE9344] hover:bg-[#EEA858] active:scale-95 text-[#20120D] text-xs font-bold px-3 py-1.5 rounded-lg inline-flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+                    >
+                      <Upload size={13} className="text-[#20120D]" />
+                      <span>Upload from Device</span>
+                    </button>
+                    <input
+                      type="url"
+                      value={newProdImg}
+                      onChange={(e) => setNewProdImg(e.target.value)}
+                      placeholder="Or paste image URL"
+                      className="w-full text-xs px-2.5 py-1.5 rounded bg-[#1e0e0a] border border-[#4a261a] text-white focus:outline-hidden text-[11px]"
+                    />
+                  </div>
+                </div>
               </div>
 
               <div>
@@ -1278,37 +1452,78 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             </div>
 
             <form onSubmit={handleSaveEditProduct} className="space-y-4">
-              {/* Live Photo Preview */}
+              {/* Live Photo Preview & Upload */}
               <div className="bg-[#1b0b07] p-4 rounded-2xl border border-[#3d1e15] space-y-3">
-                <span className="text-[10px] uppercase font-bold tracking-wider text-[#DE9344] block">
-                  Product Image & Live Preview
-                </span>
-                <div className="flex items-center gap-4">
-                  <div className="relative w-24 h-24 rounded-2xl overflow-hidden bg-[#24120d] border-2 border-[#4a261a] shrink-0 shadow-md">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] uppercase font-bold tracking-wider text-[#DE9344] block">
+                    Product Image & Live Preview
+                  </span>
+                  {uploadingPhoto && (
+                    <span className="text-[10px] text-[#DE9344] animate-pulse font-semibold">
+                      Processing upload...
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex items-start gap-4">
+                  {/* Clickable Image Preview Thumbnail */}
+                  <div
+                    onClick={() => editFileInputRef.current?.click()}
+                    className="group relative w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden bg-[#24120d] border-2 border-[#4a261a] hover:border-[#DE9344] shrink-0 shadow-md cursor-pointer transition-colors"
+                    title="Click to choose a photo from your computer/device"
+                  >
                     <img
                       src={editProdImg || editingProduct.image}
                       alt={editProdName}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                       onError={(e) => {
                         (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=300&q=80';
                       }}
                     />
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white text-[10px] font-bold gap-1">
+                      <Upload size={16} className="text-[#DE9344]" />
+                      <span>Change</span>
+                    </div>
                   </div>
-                  <div className="flex-1 space-y-1">
-                    <label className="block text-xs font-semibold text-white">
-                      Image URL / Photo Link *
-                    </label>
-                    <input
-                      type="url"
-                      required
-                      value={editProdImg}
-                      onChange={(e) => setEditProdImg(e.target.value)}
-                      placeholder="https://images.unsplash.com/..."
-                      className="w-full text-xs px-3 py-2 rounded-lg bg-[#140805] border border-[#4a261a] text-white focus:outline-hidden focus:border-[#d3213a]"
-                    />
-                    <span className="text-[10px] text-[#8a6e54] block">
-                      Paste any high-resolution image URL or pick a quick bakery preset below:
-                    </span>
+
+                  {/* Actions: Upload Button + URL Field */}
+                  <div className="flex-1 space-y-2.5">
+                    {/* Primary Device Upload Button */}
+                    <div>
+                      <input
+                        ref={editFileInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => handlePhotoUpload(e, (url) => setEditProdImg(url))}
+                      />
+                      <div className="flex flex-wrap items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => editFileInputRef.current?.click()}
+                          disabled={uploadingPhoto}
+                          className="bg-[#DE9344] hover:bg-[#EEA858] active:scale-95 text-[#20120D] text-xs font-bold px-3.5 py-2 rounded-xl inline-flex items-center gap-2 shadow-md transition-all cursor-pointer"
+                        >
+                          <Upload size={14} className="text-[#20120D]" />
+                          <span>{uploadingPhoto ? 'Uploading...' : 'Upload Photo from Device'}</span>
+                        </button>
+                        <span className="text-[10px] text-[#a88a6d]">PNG, JPG, WEBP</span>
+                      </div>
+                    </div>
+
+                    {/* Secondary URL Field */}
+                    <div className="space-y-1">
+                      <label className="block text-[11px] font-semibold text-[#D5C2AD]">
+                        Or paste Image URL / Photo Link:
+                      </label>
+                      <input
+                        type="url"
+                        value={editProdImg}
+                        onChange={(e) => setEditProdImg(e.target.value)}
+                        placeholder="https://images.unsplash.com/... or uploaded above"
+                        className="w-full text-xs px-3 py-2 rounded-lg bg-[#140805] border border-[#4a261a] text-white focus:outline-hidden focus:border-[#DE9344]"
+                      />
+                    </div>
                   </div>
                 </div>
 

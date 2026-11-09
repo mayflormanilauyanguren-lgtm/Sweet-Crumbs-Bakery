@@ -55,7 +55,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [copiedGcash, setCopiedGcash] = useState(false);
 
-  const GCASH_NUMBER = '0900 000 0000';
+  const GCASH_NUMBER = '0917 829 3388';
   const GCASH_NAME = 'Sweet Crumbs Bakery';
 
   useEffect(() => {
@@ -81,21 +81,28 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
   const validate = () => {
     const errs: Record<string, string> = {};
-    if (!name.trim()) errs.name = 'Full name is required';
-    if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      errs.email = 'Valid email is required';
+    if (!name.trim() || name.trim().length < 2) {
+      errs.name = 'Full name is required (at least 2 characters)';
     }
-    if (!phone.trim() || phone.replace(/\D/g, '').length < 7) {
-      errs.phone = 'Valid phone number is required';
+
+    const cleanEmail = email.trim().toLowerCase();
+    if (!cleanEmail.endsWith('@gmail.com') || cleanEmail.length < 11) {
+      errs.email = 'Please provide a valid Gmail address ending with @gmail.com';
     }
-    if (deliveryMethod === 'delivery' && !address.trim()) {
-      errs.address = 'Delivery address is required';
+
+    const digitsOnly = phone.replace(/\D/g, '');
+    if (digitsOnly.length !== 11 || !digitsOnly.startsWith('09')) {
+      errs.phone = 'Phone number must be an 11-digit mobile number starting with 09 (e.g. 09171234567)';
+    }
+
+    if (deliveryMethod === 'delivery' && (!address.trim() || address.trim().length < 8)) {
+      errs.address = 'Please provide a complete delivery address with street and barangay';
     }
 
     if (paymentMethod === 'gcash') {
       const cleanRef = paymentReference.replace(/[\s-]/g, '');
-      if (!/^\d{13}$/.test(cleanRef)) {
-        errs.paymentReference = 'Enter the 13-digit reference number from your GCash receipt';
+      if (!/^\d{6,13}$/.test(cleanRef)) {
+        errs.paymentReference = 'Enter the reference number from your GCash receipt (at least 6 digits)';
       }
     } else if (paymentMethod === 'bank') {
       if (!paymentReference.trim()) {
@@ -131,11 +138,18 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       giftMessage: hasGiftCard && giftMessage.trim() ? giftMessage.trim() : undefined,
       paymentMethod,
       paymentReference: paymentReference.trim() || null,
-      items: activeItems,
-      subtotal,
-      deliveryFee,
-      discount: discountAmount,
-      total,
+      items: activeItems.map((it) => ({
+        id: String(it.id),
+        name: String(it.name),
+        price: Number(it.price) || 0,
+        qty: Number(it.qty) || 1,
+        img: String(it.img || ''),
+        meta: it.meta ? String(it.meta) : undefined,
+      })),
+      subtotal: Math.round(subtotal),
+      deliveryFee: Math.round(deliveryFee),
+      discount: Math.round(discountAmount),
+      total: Math.round(total),
       status: 'Order Confirmed',
       trackingStep: 1,
       createdAt: new Date().toISOString(),
@@ -145,7 +159,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     try {
       const savedOrder = await createNewOrder(orderPayload);
       onOrderPlaced(savedOrder);
-      onShowToast(`Order #${savedOrder.id} placed and recorded in Supabase database!`);
+      onShowToast(`Order #${savedOrder.id} placed successfully and recorded!`);
       onClose();
     } catch (err: any) {
       console.error('Checkout error:', err);
@@ -225,7 +239,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
               <div>
                 <label className="block text-xs font-semibold text-[#25140C] mb-1">
-                  Email Address *
+                  Gmail Address *
                 </label>
                 <input
                   type="email"
@@ -235,7 +249,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                     if (errors.email) setErrors((prev) => ({ ...prev, email: '' }));
                   }}
                   className="w-full text-xs px-3.5 py-2.5 rounded-xl border border-[#DECDBA] focus:border-[#A8181E] focus:outline-hidden bg-[#FAF6F0]"
-                  placeholder="maria@example.com"
+                  placeholder="yourname@gmail.com"
                 />
                 {errors.email && <p className="text-xs text-[#c0392b] mt-1">{errors.email}</p>}
               </div>
@@ -243,17 +257,19 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
             <div>
               <label className="block text-xs font-semibold text-[#25140C] mb-1">
-                Phone Number *
+                Phone Number (11 Digits) *
               </label>
               <input
                 type="tel"
+                maxLength={11}
                 value={phone}
                 onChange={(e) => {
-                  setPhone(e.target.value);
+                  const cleaned = e.target.value.replace(/\D/g, '').slice(0, 11);
+                  setPhone(cleaned);
                   if (errors.phone) setErrors((prev) => ({ ...prev, phone: '' }));
                 }}
                 className="w-full text-xs px-3.5 py-2.5 rounded-xl border border-[#DECDBA] focus:border-[#A8181E] focus:outline-hidden bg-[#FAF6F0]"
-                placeholder="+63 900 000 0000"
+                placeholder="09171234567"
               />
               {errors.phone && <p className="text-xs text-[#c0392b] mt-1">{errors.phone}</p>}
             </div>

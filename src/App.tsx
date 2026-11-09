@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { AuthProvider } from './context/AuthContext.tsx';
+import { AuthProvider, useAuth } from './context/AuthContext.tsx';
 import { Product, CartItem, Order, Review } from './types.ts';
 import { Navbar } from './components/Navbar.tsx';
 import { Footer } from './components/Footer.tsx';
@@ -35,6 +35,7 @@ import {
   Plus,
   Eye,
   Star,
+  Zap,
 } from 'lucide-react';
 
 export default function App() {
@@ -46,6 +47,7 @@ export default function App() {
 }
 
 function MainApp() {
+  const { user, profile } = useAuth();
   const [currentPage, setCurrentPage] = useState<string>('home');
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedProductModal, setSelectedProductModal] = useState<Product | null>(null);
@@ -87,7 +89,7 @@ function MainApp() {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isWishlistOpen, setIsWishlistOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
-  const [instantCheckoutItem, setInstantCheckoutItem] = useState<CartItem | null>(null);
+  const [authPromptMessage, setAuthPromptMessage] = useState<string | undefined>(undefined);
   const [isTrackingOpen, setIsTrackingOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [confirmedOrder, setConfirmedOrder] = useState<Order | null>(null);
@@ -221,20 +223,6 @@ function MainApp() {
       ];
     });
     showToast(`${qtyToAdd > 1 ? `${qtyToAdd} × ` : ''}${product.name} added to cart!`);
-  };
-
-  // Express Instant Checkout (Direct purchase without keeping in cart)
-  const handleInstantCheckout = (product: Product, quantityToAdd: number = 1) => {
-    const qtyToAdd = Math.max(1, quantityToAdd);
-    const item: CartItem = {
-      id: product.id,
-      name: product.name,
-      price: product.price,
-      qty: qtyToAdd,
-      img: product.image,
-    };
-    setInstantCheckoutItem(item);
-    setIsCheckoutOpen(true);
   };
 
   const handleUpdateCartQty = (index: number, newQty: number) => {
@@ -390,19 +378,6 @@ function MainApp() {
     });
     showToast(`${spec.name} added to cart with 15% savings!`);
     setIsCartOpen(true);
-  };
-
-  const handleInstantOrderSpecial = (spec: typeof dailySpecials.strawberry) => {
-    const item: CartItem = {
-      id: spec.id,
-      name: spec.name,
-      price: spec.specialPrice,
-      qty: 1,
-      img: spec.image,
-      meta: `Today's Special (15% Off Reg. ₱${spec.originalPrice.toLocaleString()})`,
-    };
-    setInstantCheckoutItem(item);
-    setIsCheckoutOpen(true);
   };
 
   // Review submission
@@ -835,8 +810,8 @@ function MainApp() {
                         }}
                         className="bg-[#20120D] hover:bg-[#A8181E] text-white font-semibold text-xs sm:text-sm uppercase tracking-wider px-8 py-3.5 rounded-full shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer inline-flex items-center gap-2"
                       >
+                        <ShoppingBag size={14} />
                         <span>Add To Bag</span>
-                        <ArrowRight size={15} />
                       </button>
 
                       <button
@@ -1026,9 +1001,10 @@ function MainApp() {
                             };
                             handleAddToCart(prod);
                           }}
-                          className="bg-[#20120D] hover:bg-[#A8181E] text-white text-xs font-semibold uppercase tracking-wider px-5 py-2.5 rounded-full transition-all duration-200 cursor-pointer shadow-sm hover:-translate-y-0.5"
+                          className="bg-[#20120D] hover:bg-[#A8181E] text-white text-xs font-semibold uppercase tracking-wider px-6 py-2.5 rounded-full transition-all duration-200 cursor-pointer shadow-sm hover:-translate-y-0.5 inline-flex items-center gap-1.5"
                         >
-                          Add To Bag →
+                          <ShoppingBag size={13} />
+                          <span>Add To Bag</span>
                         </button>
                       </div>
                     </div>
@@ -1419,6 +1395,101 @@ function MainApp() {
                   </div>
 
                 </div>
+              </div>
+            </section>
+
+            {/* 4.5. TODAY'S KITCHEN HIGHLIGHT (Interactive Daily Special Spotlight) */}
+            <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="bg-[#24130C] rounded-3xl overflow-hidden border border-[#4D2E21] shadow-2xl">
+                {/* Header Switcher Tabs */}
+                <div className="flex flex-wrap items-center justify-between border-b border-[#4D2E21] px-6 sm:px-10 py-4 gap-4 bg-[#1E0F0A]">
+                  <div className="inline-flex items-center gap-2 text-xs uppercase font-bold tracking-widest text-[#DE9344]">
+                    <Sparkles size={14} className="text-[#DE9344]" />
+                    <span>TODAY'S KITCHEN HIGHLIGHT</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setSpecialTab('strawberry')}
+                      className={`text-xs font-bold uppercase tracking-wider px-4 py-1.5 rounded-full transition-all cursor-pointer ${
+                        specialTab === 'strawberry'
+                          ? 'bg-[#DE9344] text-[#20120D] shadow-sm'
+                          : 'bg-white/5 text-[#D5C2AD] hover:text-white hover:bg-white/10'
+                      }`}
+                    >
+                      🍓 Strawberry Bliss
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSpecialTab('ube')}
+                      className={`text-xs font-bold uppercase tracking-wider px-4 py-1.5 rounded-full transition-all cursor-pointer ${
+                        specialTab === 'ube'
+                          ? 'bg-[#DE9344] text-[#20120D] shadow-sm'
+                          : 'bg-white/5 text-[#D5C2AD] hover:text-white hover:bg-white/10'
+                      }`}
+                    >
+                      💜 Ube Halaya
+                    </button>
+                  </div>
+                </div>
+
+                {/* Content Grid */}
+                {(() => {
+                  const spec = dailySpecials[specialTab];
+                  return (
+                    <div className="grid grid-cols-1 lg:grid-cols-12 items-center">
+                      {/* Left Info: High Contrast Cream & Gold */}
+                      <div className="lg:col-span-6 p-8 sm:p-12 lg:p-14 space-y-6 text-left">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#DE9344]/15 border border-[#DE9344]/30 text-[#DE9344] text-[11px] font-bold uppercase tracking-wider">
+                          <span>15% Special Daily Savings</span>
+                        </div>
+
+                        <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold text-[#FAF7F2] !text-[#FAF7F2] tracking-tight leading-tight">
+                          {spec.name}
+                        </h2>
+
+                        <p className="text-sm text-[#D5C2AD] leading-relaxed max-w-lg">
+                          {spec.desc}
+                        </p>
+
+                        <div className="flex items-baseline gap-4 pt-2">
+                          <div className="text-left">
+                            <span className="text-xs text-[#A89487] line-through block">
+                              ₱{spec.originalPrice} Reg.
+                            </span>
+                            <span className="font-display font-bold text-3xl sm:text-4xl text-[#DE9344]">
+                              ₱{spec.specialPrice} Today
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="pt-2">
+                          <button
+                            type="button"
+                            onClick={() => handleOrderSpecial(spec)}
+                            className="bg-[#DE9344] hover:bg-[#EEA858] text-[#20120D] font-bold text-xs sm:text-sm uppercase tracking-wider px-8 py-4 rounded-full shadow-lg transition-all duration-200 cursor-pointer inline-flex items-center gap-2 hover:scale-102"
+                          >
+                            <ShoppingBag size={16} />
+                            <span>Add Today's Special To Bag</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Right Photo */}
+                      <div className="lg:col-span-6 relative h-72 sm:h-96 lg:h-full min-h-[340px] bg-black/30 overflow-hidden">
+                        <img
+                          src={spec.image}
+                          alt={spec.name}
+                          className="w-full h-full object-cover object-center transition-all duration-700 hover:scale-103"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-r from-[#24130C] via-transparent to-transparent pointer-events-none lg:block hidden" />
+                        <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-md text-white text-[11px] font-bold px-3 py-1.5 rounded-full border border-white/20">
+                          ★ Fresh From Morning Oven
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
             </section>
 
@@ -1929,7 +2000,6 @@ function MainApp() {
                     isInWishlist={wishlistIds.includes(p.id)}
                     onToggleWishlist={handleToggleWishlist}
                     onAddToCart={handleAddToCart}
-                    onInstantCheckout={handleInstantCheckout}
                     onSelectProduct={(product) => setSelectedProductModal(product)}
                   />
                 ))}
@@ -2446,11 +2516,11 @@ function MainApp() {
                   </p>
                   <p>
                     <strong className="text-[#25140C] block mb-0.5">Phone Inquiries:</strong>
-                    +63 900 000 0000
+                    +63 917 829 3388
                   </p>
                   <p>
                     <strong className="text-[#25140C] block mb-0.5">Email Support:</strong>
-                    sweetcrumbs@example.com
+                    sweetcrumbsbakery@gmail.com
                   </p>
                   <p>
                     <strong className="text-[#25140C] block mb-0.5">Store Hours:</strong>
@@ -2564,8 +2634,15 @@ function MainApp() {
         onUpdateQty={handleUpdateCartQty}
         onRemoveItem={handleRemoveFromCart}
         onOpenCheckout={() => {
-          setIsCartOpen(false);
-          setIsCheckoutOpen(true);
+          if (!user && !profile) {
+            setIsCartOpen(false);
+            setAuthPromptMessage('Account Required: Please log in or register an account first before placing your order.');
+            setIsAuthOpen(true);
+            showToast('Please log in or create an account first before checking out.');
+          } else {
+            setIsCartOpen(false);
+            setIsCheckoutOpen(true);
+          }
         }}
         appliedDiscount={appliedDiscount}
       />
@@ -2588,26 +2665,18 @@ function MainApp() {
         isInWishlist={selectedProductModal ? wishlistIds.includes(selectedProductModal.id) : false}
         onToggleWishlist={handleToggleWishlist}
         onAddToCart={handleAddToCart}
-        onInstantCheckout={handleInstantCheckout}
         onShowToast={showToast}
       />
 
-      {/* Checkout Modal */}
+      {/* Checkout Modal (Strictly for authenticated accounts) */}
       <CheckoutModal
         isOpen={isCheckoutOpen}
-        onClose={() => {
-          setIsCheckoutOpen(false);
-          setInstantCheckoutItem(null);
-        }}
+        onClose={() => setIsCheckoutOpen(false)}
         cart={cart}
-        directItem={instantCheckoutItem}
         appliedDiscount={appliedDiscount}
         onOrderPlaced={(order) => {
           setConfirmedOrder(order);
-          if (!instantCheckoutItem) {
-            setCart([]);
-          }
-          setInstantCheckoutItem(null);
+          setCart([]);
           setIsTrackingOpen(true);
         }}
         onShowToast={showToast}
@@ -2620,11 +2689,15 @@ function MainApp() {
         order={confirmedOrder}
       />
 
-      {/* Auth / Account Modal */}
+      {/* Auth / Account Modal (Persistent Accounts & Strictly Log In terminology) */}
       <AuthModal
         isOpen={isAuthOpen}
-        onClose={() => setIsAuthOpen(false)}
+        onClose={() => {
+          setIsAuthOpen(false);
+          setAuthPromptMessage(undefined);
+        }}
         onShowToast={showToast}
+        promptMessage={authPromptMessage}
       />
 
       {/* Customer Footer with discreet 3-click secret administrator trigger */}

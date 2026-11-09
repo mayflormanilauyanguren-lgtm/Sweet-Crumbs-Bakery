@@ -160,11 +160,15 @@ export const Navbar: React.FC<NavbarProps> = ({
                 )}
               </button>
 
-              {/* Account */}
+              {/* Account / Log In Button */}
               <button
                 onClick={onOpenAuth}
-                className="relative w-10 h-10 rounded-full bg-white border border-[#EBDCCB] flex items-center justify-center text-[#25140C] hover:border-[#B81D24]/40 hover:scale-105 active:scale-95 transition-all shadow-xs cursor-pointer overflow-hidden"
-                title={user ? `Signed in as ${user.email}` : 'Sign In'}
+                className={`relative rounded-full transition-all duration-200 cursor-pointer flex items-center gap-1.5 shadow-xs ${
+                  user
+                    ? 'w-10 h-10 bg-white border border-[#EBDCCB] justify-center text-[#25140C] hover:border-[#B81D24]/40 hover:scale-105'
+                    : 'h-10 px-3.5 bg-white hover:bg-[#FAF6F0] border border-[#EBDCCB] text-[#25140C] hover:text-[#A8181E] text-xs font-bold'
+                }`}
+                title={user ? `Logged in as ${user.email}` : 'Log In'}
                 aria-label="Account"
               >
                 {user ? (
@@ -172,7 +176,10 @@ export const Navbar: React.FC<NavbarProps> = ({
                     {(profile?.name || user.email || 'U')[0].toUpperCase()}
                   </span>
                 ) : (
-                  <UserIcon size={18} />
+                  <>
+                    <UserIcon size={15} />
+                    <span className="hidden sm:inline">Log In</span>
+                  </>
                 )}
               </button>
 

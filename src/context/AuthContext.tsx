@@ -2,16 +2,28 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { getSupabase, isSupabaseConfigured } from '../lib/supabase.ts';
 import { UserProfile } from '../types.ts';
+import {
+  registerCustomerAccount,
+  loginCustomerAccount,
+  getCurrentStoredUser,
+  setCurrentStoredUser,
+  updateCustomerProfile,
+} from '../lib/dataService.ts';
 
 interface AuthContextType {
-  user: User | null;
+  user: User | UserProfile | null;
   session: Session | null;
   profile: UserProfile | null;
   loading: boolean;
   isConfigured: boolean;
   signInWithEmail: (email: string, pass: string) => Promise<{ error?: string }>;
-  signUpWithEmail: (email: string, pass: string, name?: string) => Promise<{ error?: string }>;
-  signInWithGoogle: () => Promise<{ error?: string }>;
+  signUpWithEmail: (
+    email: string,
+    pass: string,
+    name?: string,
+    phone?: string,
+    address?: string
+  ) => Promise<{ error?: string }>;
   signOutUser: () => Promise<void>;
   updateProfile: (data: { name?: string; phone?: string; address?: string }) => Promise<void>;
 }
@@ -24,57 +36,69 @@ const AuthContext = createContext<AuthContextType>({
   isConfigured: false,
   signInWithEmail: async () => ({}),
   signUpWithEmail: async () => ({}),
-  signInWithGoogle: async () => ({}),
   signOutUser: async () => {},
   updateProfile: async () => {},
 });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const isConfigured = isSupabaseConfigured();
 
-  // Load profile from local storage or user metadata
-  const loadProfile = (usr: User | null) => {
-    if (!usr) {
-      setProfile(null);
-      return;
-    }
-    const meta = usr.user_metadata || {};
-    const localSaved = localStorage.getItem(`sc_profile_${usr.id}`);
-    const parsed = localSaved ? JSON.parse(localSaved) : {};
-
-    setProfile({
-      id: 1,
-      uid: usr.id,
-      email: usr.email || '',
-      name: parsed.name || meta.full_name || meta.name || usr.email?.split('@')[0] || 'Customer',
-      phone: parsed.phone || '',
-      address: parsed.address || '',
-    });
-  };
-
+  // Load existing user from persistent database storage or Supabase Auth
   useEffect(() => {
+    const storedUser = getCurrentStoredUser();
+    if (storedUser) {
+      setProfile(storedUser);
+    }
+
     const supabase = getSupabase();
+    supabase.auth
+      .getSession()
+      .then(({ data: { session: currentSession } }) => {
+        setSession(currentSession);
+        if (currentSession?.user && !storedUser) {
+          const meta = currentSession.user.user_metadata || {};
+          const loaded: UserProfile = {
+            id: currentSession.user.id,
+            uid: currentSession.user.id,
+            email: currentSession.user.email || '',
+            name: meta.full_name || meta.name || 'Customer',
+            phone: meta.phone || '',
+            address: meta.address || '',
+          };
+          setProfile(loaded);
+          setCurrentStoredUser(loaded);
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        setLoading(false);
+      });
 
-    // Check existing session
-    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
-      setSession(currentSession);
-      setUser(currentSession?.user ?? null);
-      loadProfile(currentSession?.user ?? null);
-      setLoading(false);
-    }).catch(() => {
-      setLoading(false);
-    });
-
-    // Listen to auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, newSession) => {
       setSession(newSession);
-      setUser(newSession?.user ?? null);
-      loadProfile(newSession?.user ?? null);
-      setLoading(false);
+      if (newSession?.user) {
+        const stored = getCurrentStoredUser();
+        if (stored) {
+          setProfile(stored);
+        } else {
+          const meta = newSession.user.user_metadata || {};
+          const loaded: UserProfile = {
+            id: newSession.user.id,
+            uid: newSession.user.id,
+            email: newSession.user.email || '',
+            name: meta.full_name || meta.name || 'Customer',
+            phone: meta.phone || '',
+            address: meta.address || '',
+          };
+          setProfile(loaded);
+          setCurrentStoredUser(loaded);
+        }
+      }
     });
 
     return () => {
@@ -82,92 +106,70 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
-  const signInWithEmail = async (email: string, pass: string) => {
-    const supabase = getSupabase();
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password: pass,
-    });
-    if (error) {
-      return { error: error.message };
+  const signInWithEmail = async (email: string, pass: string): Promise<{ error?: string }> => {
+    const res = await loginCustomerAccount(email, pass);
+    if (res.error) {
+      return { error: res.error };
     }
-    setUser(data.user);
-    setSession(data.session);
-    loadProfile(data.user);
+    if (res.user) {
+      setProfile(res.user);
+      setCurrentStoredUser(res.user);
+    }
     return {};
   };
 
-  const signUpWithEmail = async (email: string, pass: string, name?: string) => {
-    const supabase = getSupabase();
-    const { data, error } = await supabase.auth.signUp({
+  const signUpWithEmail = async (
+    email: string,
+    pass: string,
+    name?: string,
+    phone?: string,
+    address?: string
+  ): Promise<{ error?: string }> => {
+    const res = await registerCustomerAccount({
+      fullName: name || '',
       email,
       password: pass,
-      options: {
-        data: {
-          full_name: name || '',
-        },
-      },
+      phone: phone || '',
+      address: address || '',
     });
-    if (error) {
-      return { error: error.message };
-    }
-    setUser(data.user);
-    setSession(data.session);
-    loadProfile(data.user);
-    return {};
-  };
 
-  const signInWithGoogle = async () => {
-    const supabase = getSupabase();
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: window.location.origin,
-      },
-    });
-    if (error) {
-      return { error: error.message };
+    if (res.error) {
+      return { error: res.error };
+    }
+
+    if (res.user) {
+      setProfile(res.user);
+      setCurrentStoredUser(res.user);
     }
     return {};
   };
 
   const signOutUser = async () => {
-    const supabase = getSupabase();
-    await supabase.auth.signOut();
-    setUser(null);
-    setSession(null);
+    try {
+      const supabase = getSupabase();
+      await supabase.auth.signOut();
+    } catch {}
     setProfile(null);
+    setSession(null);
+    setCurrentStoredUser(null);
   };
 
   const updateProfile = async (data: { name?: string; phone?: string; address?: string }) => {
-    if (!user) return;
-    const updated = {
-      ...(profile || { id: 1, uid: user.id, email: user.email || '' }),
-      ...data,
-    };
-    setProfile(updated as UserProfile);
-    localStorage.setItem(`sc_profile_${user.id}`, JSON.stringify(data));
-
-    // Also update Supabase user metadata if available
-    const supabase = getSupabase();
-    if (data.name) {
-      await supabase.auth.updateUser({
-        data: { full_name: data.name },
-      });
-    }
+    if (!profile?.email) return;
+    const updated = await updateCustomerProfile(profile.email, data);
+    setProfile(updated);
   };
 
   return (
     <AuthContext.Provider
       value={{
-        user,
+        user: profile as any,
         session,
         profile,
         loading,
         isConfigured,
         signInWithEmail,
         signUpWithEmail,
-        signInWithGoogle,
         signOutUser,
         updateProfile,
       }}

@@ -65,7 +65,7 @@ export interface ContactMessage {
 }
 
 export interface UserProfile {
-  id: number;
+  id: string | number;
   uid: string;
   email: string;
   name?: string | null;

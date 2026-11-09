@@ -1,13 +1,12 @@
 import React from 'react';
 import { Product } from '../types.ts';
-import { Heart, Plus, Eye, Star, Zap } from 'lucide-react';
+import { Heart, Plus, Eye, Star } from 'lucide-react';
 
 interface ProductCardProps {
   product: Product;
   isInWishlist: boolean;
   onToggleWishlist: (product: Product) => void;
   onAddToCart: (product: Product) => void;
-  onInstantCheckout?: (product: Product) => void;
   onSelectProduct?: (product: Product) => void;
 }
 
@@ -16,7 +15,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   isInWishlist,
   onToggleWishlist,
   onAddToCart,
-  onInstantCheckout,
   onSelectProduct,
 }) => {
   const ratingValue = product.rating || 5;
@@ -139,45 +137,26 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         </p>
 
         {/* Price & Action Row */}
-        <div className="flex flex-col gap-2.5 pt-3 border-t border-[#F5EDE3]">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-[10px] text-[#9C8578] block -mb-0.5 font-medium uppercase tracking-wider">Price</span>
-              <span className="font-display font-bold text-lg text-[#25140C] tabular-nums">
-                ₱{product.price.toLocaleString()}
-              </span>
-            </div>
-
-            <div className="flex items-center gap-1.5">
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onAddToCart(product);
-                }}
-                className="inline-flex items-center gap-1 bg-[#FAF6F0] hover:bg-[#20120D] text-[#20120D] hover:text-white border border-[#DECDBA] text-[11px] font-semibold px-3 py-1.5 rounded-full transition-all duration-200 cursor-pointer shadow-2xs"
-                title={`Keep ${product.name} in bag to continue shopping`}
-              >
-                <Plus size={12} className="stroke-[2.5]" />
-                <span>Add to Bag</span>
-              </button>
-
-              {onInstantCheckout && (
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onInstantCheckout(product);
-                  }}
-                  className="inline-flex items-center gap-1 bg-[#A8181E] hover:bg-[#851217] active:bg-[#680C10] text-white text-[11px] font-bold px-3 py-1.5 rounded-full transition-all duration-200 shadow-xs hover:shadow-md cursor-pointer hover:scale-102"
-                  title={`Order ${product.name} instantly without opening cart`}
-                >
-                  <Zap size={11} className="fill-current" />
-                  <span>Order Now</span>
-                </button>
-              )}
-            </div>
+        <div className="flex items-center justify-between pt-3 border-t border-[#F5EDE3]">
+          <div>
+            <span className="text-[10px] text-[#9C8578] block -mb-0.5 font-medium uppercase tracking-wider">Price</span>
+            <span className="font-display font-bold text-lg text-[#25140C] tabular-nums">
+              ₱{product.price.toLocaleString()}
+            </span>
           </div>
+
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onAddToCart(product);
+            }}
+            className="inline-flex items-center gap-1.5 bg-[#25140C] hover:bg-[#A8181E] text-white text-xs font-semibold px-4 py-2 rounded-full transition-all duration-200 cursor-pointer shadow-sm hover:shadow-md"
+            title={`Add ${product.name} to bag`}
+          >
+            <Plus size={13} className="stroke-[2.5]" />
+            <span>Add to Bag</span>
+          </button>
         </div>
       </div>
     </article>

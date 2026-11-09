@@ -70,6 +70,7 @@ export async function testSupabaseConnection(
     orders: false,
     reviews: false,
     contact_messages: false,
+    users: false,
   };
 
   try {
@@ -85,19 +86,22 @@ export async function testSupabaseConnection(
     const { error: msgErr } = await client.from('contact_messages').select('id').limit(1);
     tables.contact_messages = !msgErr;
 
+    const { error: usrErr } = await client.from('users').select('id').limit(1);
+    tables.users = !usrErr;
+
     const latencyMs = Math.round(performance.now() - startTime);
     const allReady = tables.products && tables.orders && tables.reviews && tables.contact_messages;
 
     if (allReady) {
       return {
         success: true,
-        message: `Successfully connected to Supabase in ${latencyMs}ms! All 4 database tables are verified.`,
+        message: `Successfully connected to Supabase in ${latencyMs}ms! All database tables are verified.`,
         tables,
         latencyMs,
       };
     }
 
-    if (!tables.products && !tables.orders && !tables.reviews && !tables.contact_messages) {
+    if (!tables.products && !tables.orders && !tables.reviews && !tables.contact_messages && !tables.users) {
       return {
         success: false,
         message: 'Connected to Supabase project, but database tables do not exist yet. Please run the SQL schema script in your Supabase SQL Editor.',
@@ -212,7 +216,7 @@ CREATE TABLE IF NOT EXISTS public.products (
   id text PRIMARY KEY,
   name text NOT NULL,
   category text NOT NULL,
-  price integer NOT NULL,
+  price numeric NOT NULL,
   rating integer DEFAULT 5,
   reviews_count integer DEFAULT 0,
   description text NOT NULL,
@@ -236,15 +240,24 @@ CREATE TABLE IF NOT EXISTS public.orders (
   payment_method text NOT NULL,
   payment_reference text,
   items jsonb NOT NULL,
-  subtotal integer NOT NULL,
-  delivery_fee integer NOT NULL,
-  discount integer NOT NULL,
-  total integer NOT NULL,
+  subtotal numeric NOT NULL,
+  delivery_fee numeric NOT NULL,
+  discount numeric NOT NULL,
+  total numeric NOT NULL,
   status text DEFAULT 'Order Confirmed' NOT NULL,
   tracking_step integer DEFAULT 1,
   created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
   updated_at timestamp with time zone DEFAULT timezone('utc'::text, now())
 );
+
+-- Ensure all columns exist on pre-existing orders table (Safe to re-run anytime)
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS user_email text;
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS delivery_time_slot text;
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS order_notes text;
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS gift_message text;
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS payment_reference text;
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS tracking_step integer DEFAULT 1;
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS updated_at timestamp with time zone DEFAULT timezone('utc'::text, now());
 
 -- 3. Reviews table
 CREATE TABLE IF NOT EXISTS public.reviews (
@@ -265,31 +278,92 @@ CREATE TABLE IF NOT EXISTS public.contact_messages (
   created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
+-- 5. Users & Customer Accounts table
+CREATE TABLE IF NOT EXISTS public.users (
+  id text PRIMARY KEY,
+  full_name text NOT NULL,
+  email text UNIQUE NOT NULL,
+  password_hash text NOT NULL,
+  phone text NOT NULL,
+  address text NOT NULL,
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
+  updated_at timestamp with time zone DEFAULT timezone('utc'::text, now())
+);
+
 -- Enable Row Level Security (RLS)
 ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.reviews ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.contact_messages ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 
--- Allow public read on products and reviews
+-- Products policies (Safe to re-run)
+DROP POLICY IF EXISTS "Public products viewable" ON public.products;
 CREATE POLICY "Public products viewable" ON public.products FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public products insertable" ON public.products;
 CREATE POLICY "Public products insertable" ON public.products FOR INSERT WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Public products updateable" ON public.products;
 CREATE POLICY "Public products updateable" ON public.products FOR UPDATE USING (true);
+
+DROP POLICY IF EXISTS "Public products deleteable" ON public.products;
 CREATE POLICY "Public products deleteable" ON public.products FOR DELETE USING (true);
 
+-- Reviews policies (Safe to re-run)
+DROP POLICY IF EXISTS "Public reviews viewable" ON public.reviews;
 CREATE POLICY "Public reviews viewable" ON public.reviews FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public reviews insertable" ON public.reviews;
 CREATE POLICY "Public reviews insertable" ON public.reviews FOR INSERT WITH CHECK (true);
 
--- Allow public to place orders and submit contact forms
+-- Orders policies (Safe to re-run)
+DROP POLICY IF EXISTS "Public orders insertable" ON public.orders;
 CREATE POLICY "Public orders insertable" ON public.orders FOR INSERT WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Public orders viewable" ON public.orders;
 CREATE POLICY "Public orders viewable" ON public.orders FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public orders updateable" ON public.orders;
 CREATE POLICY "Public orders updateable" ON public.orders FOR UPDATE USING (true);
+
+DROP POLICY IF EXISTS "Public orders deleteable" ON public.orders;
 CREATE POLICY "Public orders deleteable" ON public.orders FOR DELETE USING (true);
 
+-- Contact messages policies (Safe to re-run)
+DROP POLICY IF EXISTS "Public contact insertable" ON public.contact_messages;
 CREATE POLICY "Public contact insertable" ON public.contact_messages FOR INSERT WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Public contact viewable" ON public.contact_messages;
 CREATE POLICY "Public contact viewable" ON public.contact_messages FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public contact updateable" ON public.contact_messages;
 CREATE POLICY "Public contact updateable" ON public.contact_messages FOR UPDATE USING (true);
+
+-- Users & Customer Accounts policies (Safe to re-run)
+DROP POLICY IF EXISTS "Public users viewable" ON public.users;
+CREATE POLICY "Public users viewable" ON public.users FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public users insertable" ON public.users;
+CREATE POLICY "Public users insertable" ON public.users FOR INSERT WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Public users updateable" ON public.users;
+CREATE POLICY "Public users updateable" ON public.users FOR UPDATE USING (true);
 
 -- Realtime support
 ALTER TABLE public.orders REPLICA IDENTITY FULL;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables 
+    WHERE pubname = 'supabase_realtime' 
+    AND schemaname = 'public' 
+    AND tablename = 'orders'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.orders;
+  END IF;
+EXCEPTION
+  WHEN undefined_object THEN NULL;
+END $$;
 `;

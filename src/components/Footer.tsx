@@ -137,11 +137,11 @@ export const Footer: React.FC<FooterProps> = ({
               </li>
               <li className="flex items-center gap-2">
                 <Phone size={14} className="text-[#DE9344] shrink-0" />
-                <span>+63 900 000 0000</span>
+                <span>+63 917 829 3388</span>
               </li>
               <li className="flex items-center gap-2">
                 <Mail size={14} className="text-[#DE9344] shrink-0" />
-                <span>sweetcrumbs@example.com</span>
+                <span>sweetcrumbsbakery@gmail.com</span>
               </li>
             </ul>
           </div>
