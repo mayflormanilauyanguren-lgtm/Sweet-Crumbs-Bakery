@@ -89,13 +89,50 @@ export async function testSupabaseConnection(
     const { error: usrErr } = await client.from('users').select('id').limit(1);
     tables.users = !usrErr;
 
+    // Verify order write capability (RLS permission check)
+    let orderWriteOk = true;
+    let orderWriteMessage = '';
+    const testId = 'HC-' + Math.floor(1000 + Math.random() * 9000);
+    const { error: testInsertErr } = await client.from('orders').insert({
+      id: testId,
+      customer_name: 'Health Check',
+      customer_email: 'health@sweetcrumbsbakery.com',
+      customer_phone: '09178293388',
+      delivery_method: 'pickup',
+      address: 'Sweet Crumbs Bakehouse',
+      payment_method: 'cash',
+      items: [{ id: 'test', name: 'Artisan Sourdough', price: 150, qty: 1 }],
+      subtotal: 150,
+      delivery_fee: 0,
+      discount: 0,
+      total: 150,
+      status: 'Health Check Test',
+    });
+
+    if (testInsertErr) {
+      orderWriteOk = false;
+      orderWriteMessage = testInsertErr.message;
+    } else {
+      // Clean up test order row
+      await client.from('orders').delete().eq('id', testId);
+    }
+
     const latencyMs = Math.round(performance.now() - startTime);
     const allReady = tables.products && tables.orders && tables.reviews && tables.contact_messages;
 
-    if (allReady) {
+    if (allReady && orderWriteOk) {
       return {
         success: true,
-        message: `Successfully connected to Supabase in ${latencyMs}ms! All database tables are verified.`,
+        message: `Successfully connected to Supabase in ${latencyMs}ms! All database tables & order write permissions are verified.`,
+        tables,
+        latencyMs,
+      };
+    }
+
+    if (allReady && !orderWriteOk) {
+      return {
+        success: false,
+        message: `Connected to Supabase, but writing orders failed: ${orderWriteMessage}. Row-Level Security (RLS) is likely missing the "Public orders insertable" policy. Run the SQL Schema script below to fix this.`,
         tables,
         latencyMs,
       };

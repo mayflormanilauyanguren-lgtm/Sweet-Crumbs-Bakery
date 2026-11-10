@@ -33,8 +33,8 @@ export const Footer: React.FC<FooterProps> = ({
           {/* Brand Column */}
           <div className="lg:col-span-4 space-y-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-[#341F16] border border-[#4D2E21] flex items-center justify-center text-xl">
-                🍰
+              <div className="w-10 h-10 rounded-full bg-[#341F16] border border-[#DE9344]/30 overflow-hidden flex items-center justify-center">
+                <img src="/logo.svg" alt="Sweet Crumbs Bakery Logo" className="w-full h-full object-cover" />
               </div>
               <div>
                 <span className="font-display font-bold text-xl sm:text-2xl text-white tracking-tight block">

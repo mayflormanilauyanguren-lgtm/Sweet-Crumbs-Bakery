@@ -9,6 +9,7 @@ import { WishlistDrawer } from './components/WishlistDrawer.tsx';
 import { CheckoutModal } from './components/CheckoutModal.tsx';
 import { TrackingModal } from './components/TrackingModal.tsx';
 import { AuthModal } from './components/AuthModal.tsx';
+import { OrderHistory } from './components/OrderHistory.tsx';
 import { AdminDashboard } from './components/AdminDashboard.tsx';
 import { AdminLogin } from './components/AdminLogin.tsx';
 import { ProductDetailModal } from './components/ProductDetailModal.tsx';
@@ -91,6 +92,7 @@ function MainApp() {
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [authPromptMessage, setAuthPromptMessage] = useState<string | undefined>(undefined);
   const [isTrackingOpen, setIsTrackingOpen] = useState(false);
+  const [isOrderHistoryOpen, setIsOrderHistoryOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [confirmedOrder, setConfirmedOrder] = useState<Order | null>(null);
 
@@ -516,6 +518,7 @@ function MainApp() {
         onOpenCart={() => setIsCartOpen(true)}
         onOpenWishlist={() => setIsWishlistOpen(true)}
         onOpenAuth={() => setIsAuthOpen(true)}
+        onOpenOrders={() => setIsOrderHistoryOpen(true)}
       />
 
       {/* Main Pages */}
@@ -2698,6 +2701,47 @@ function MainApp() {
         }}
         onShowToast={showToast}
         promptMessage={authPromptMessage}
+        onOpenOrders={() => {
+          setIsAuthOpen(false);
+          setIsOrderHistoryOpen(true);
+        }}
+      />
+
+      {/* Full Order History & Real-Time Tracking Modal */}
+      <OrderHistory
+        isOpen={isOrderHistoryOpen}
+        onClose={() => setIsOrderHistoryOpen(false)}
+        onOpenTracking={(order) => {
+          setConfirmedOrder(order);
+          setIsOrderHistoryOpen(false);
+          setIsTrackingOpen(true);
+        }}
+        onReorderItems={(items) => {
+          setCart((prev) => {
+            const updated = [...prev];
+            for (const item of items) {
+              const idx = updated.findIndex((ci) => ci.id === item.id);
+              if (idx > -1) {
+                updated[idx].qty += item.qty;
+              } else {
+                updated.push(item);
+              }
+            }
+            return updated;
+          });
+          setIsOrderHistoryOpen(false);
+          setIsCartOpen(true);
+          showToast(`Added ${items.length} item${items.length > 1 ? 's' : ''} to your bag!`);
+        }}
+        onOpenShop={() => {
+          setIsOrderHistoryOpen(false);
+          navigateTo('shop');
+        }}
+        onOpenAuth={() => {
+          setIsOrderHistoryOpen(false);
+          setIsAuthOpen(true);
+        }}
+        onShowToast={showToast}
       />
 
       {/* Customer Footer with discreet 3-click secret administrator trigger */}

@@ -275,59 +275,85 @@ export async function syncOrderToSupabase(order: Order): Promise<{ success: bool
   };
 
   let currentPayload: any = { ...payload };
-  const maxRetries = 8;
+  const maxRetries = 10;
 
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
-      const { data, error } = await supabase
-        .from('orders')
-        .upsert(currentPayload, { onConflict: 'id' })
-        .select();
+      // 1. Try direct insert (cleaner and doesn't require SELECT permission or onConflict constraints)
+      let res = await supabase.from('orders').insert(currentPayload);
 
-      if (!error && data && data[0]) {
+      // If already exists (duplicate key error), update existing order instead
+      if (
+        res.error &&
+        (res.error.code === '23505' ||
+          res.error.message.includes('duplicate') ||
+          res.error.message.includes('already exists') ||
+          res.error.message.includes('unique constraint'))
+      ) {
+        res = await supabase.from('orders').update(currentPayload).eq('id', order.id);
+      }
+
+      // Success check!
+      if (!res.error) {
         console.log('Order successfully synced and stored in Supabase database:', order.id);
         return { success: true };
       }
 
-      if (error) {
-        // Detect missing column error (e.g. PGRST204 "Could not find the 'delivery_time_slot' column")
-        const missingMatch = error.message.match(/Could not find the '([^']+)' column/i);
-        if (missingMatch && missingMatch[1]) {
-          const missingColumn = missingMatch[1];
-          console.warn(`Supabase orders table is missing column "${missingColumn}". Preserving data in notes & retrying...`);
+      const error = res.error;
 
-          // Safeguard the data by embedding into order_notes if column isn't in DB yet
-          if (missingColumn === 'delivery_time_slot' && currentPayload.delivery_time_slot) {
-            const slotNote = `[Slot: ${currentPayload.delivery_time_slot}]`;
-            currentPayload.order_notes = currentPayload.order_notes
-              ? `${slotNote} ${currentPayload.order_notes}`
-              : slotNote;
-          }
-          if (missingColumn === 'gift_message' && currentPayload.gift_message) {
-            const giftNote = `[Gift: ${currentPayload.gift_message}]`;
-            currentPayload.order_notes = currentPayload.order_notes
-              ? `${giftNote} ${currentPayload.order_notes}`
-              : giftNote;
-          }
-          if (missingColumn === 'payment_reference' && currentPayload.payment_reference) {
-            const refNote = `[Ref: ${currentPayload.payment_reference}]`;
-            currentPayload.order_notes = currentPayload.order_notes
-              ? `${refNote} ${currentPayload.order_notes}`
-              : refNote;
-          }
+      // Detect missing column error (e.g. PGRST204 "Could not find the 'delivery_time_slot' column")
+      const missingMatch =
+        error.message.match(/Could not find the '([^']+)' column/i) ||
+        error.message.match(/column "([^"]+)" of relation "orders" does not exist/i);
 
-          delete currentPayload[missingColumn];
-          continue; // retry upsert without the missing column
+      if (missingMatch && missingMatch[1]) {
+        const missingColumn = missingMatch[1];
+        console.warn(`Supabase orders table is missing column "${missingColumn}". Preserving data in notes & retrying...`);
+
+        // Safeguard the data by embedding into order_notes if column isn't in DB yet
+        if (missingColumn === 'delivery_time_slot' && currentPayload.delivery_time_slot) {
+          const slotNote = `[Slot: ${currentPayload.delivery_time_slot}]`;
+          currentPayload.order_notes = currentPayload.order_notes
+            ? `${slotNote} ${currentPayload.order_notes}`
+            : slotNote;
+        }
+        if (missingColumn === 'gift_message' && currentPayload.gift_message) {
+          const giftNote = `[Gift: ${currentPayload.gift_message}]`;
+          currentPayload.order_notes = currentPayload.order_notes
+            ? `${giftNote} ${currentPayload.order_notes}`
+            : giftNote;
+        }
+        if (missingColumn === 'payment_reference' && currentPayload.payment_reference) {
+          const refNote = `[Ref: ${currentPayload.payment_reference}]`;
+          currentPayload.order_notes = currentPayload.order_notes
+            ? `${refNote} ${currentPayload.order_notes}`
+            : refNote;
         }
 
-        console.error('Supabase order upsert error details:', {
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-          code: error.code,
-        });
-        return { success: false, error: error.message };
+        delete currentPayload[missingColumn];
+        continue; // retry insert without the missing column
       }
+
+      // Handle items type mismatch (PostgreSQL column is text instead of jsonb)
+      if (
+        error.message.includes('items') &&
+        (error.message.includes('type text') ||
+          error.message.includes('expression is of type jsonb') ||
+          error.message.includes('malformed'))
+      ) {
+        console.warn('Converting items array to JSON string for text column and retrying...');
+        currentPayload.items = JSON.stringify(sanitizedItems);
+        continue;
+      }
+
+      console.error('Supabase order insert error details:', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code,
+      });
+
+      return { success: false, error: error.message };
     } catch (err: any) {
       console.error('Supabase order sync exception:', err);
       return { success: false, error: err?.message || String(err) };

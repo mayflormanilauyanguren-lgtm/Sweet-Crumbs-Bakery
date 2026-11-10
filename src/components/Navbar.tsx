@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext.tsx';
-import { ShoppingBag, Heart, User as UserIcon, Menu, X, Sparkles } from 'lucide-react';
+import { ShoppingBag, Heart, User as UserIcon, Menu, X, Sparkles, PackageCheck } from 'lucide-react';
 
 interface NavbarProps {
   currentPage: string;
@@ -10,6 +10,7 @@ interface NavbarProps {
   onOpenCart: () => void;
   onOpenWishlist: () => void;
   onOpenAuth: () => void;
+  onOpenOrders: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -20,6 +21,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenCart,
   onOpenWishlist,
   onOpenAuth,
+  onOpenOrders,
 }) => {
   const { user, profile } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -61,8 +63,8 @@ export const Navbar: React.FC<NavbarProps> = ({
               onClick={() => handleLinkClick('home')}
               className="flex items-center gap-3 text-left group cursor-pointer"
             >
-              <div className="w-10 h-10 rounded-full bg-[#FAF0E4] border border-[#E8D9C5] flex items-center justify-center text-xl shadow-xs group-hover:scale-105 transition-transform duration-200">
-                🍰
+              <div className="w-10 h-10 rounded-full bg-[#FAF0E4] border border-[#E8D9C5] overflow-hidden flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform duration-200">
+                <img src="/logo.svg" alt="Sweet Crumbs Bakery Logo" className="w-full h-full object-cover" />
               </div>
               <div>
                 <span className="font-display font-bold text-xl sm:text-2xl text-[#25140C] tracking-tight block leading-tight group-hover:text-[#B81D24] transition-colors">
@@ -160,6 +162,16 @@ export const Navbar: React.FC<NavbarProps> = ({
                 )}
               </button>
 
+              {/* Past Orders / Order History */}
+              <button
+                onClick={onOpenOrders}
+                className="relative w-10 h-10 rounded-full bg-white hover:bg-[#FAF6F0] border border-[#EBDCCB] flex items-center justify-center text-[#4A2718] hover:text-[#B81D24] hover:border-[#B81D24]/40 hover:scale-105 active:scale-95 transition-all shadow-xs cursor-pointer"
+                title="View Past Orders & Live Tracking"
+                aria-label="Order History"
+              >
+                <PackageCheck size={18} />
+              </button>
+
               {/* Account / Log In Button */}
               <button
                 onClick={onOpenAuth}
@@ -197,6 +209,19 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Mobile Navigation Drawer */}
           {mobileMenuOpen && (
             <div className="lg:hidden py-4 border-t border-[#F0E6D8] space-y-1 bg-[#FFFDFB]">
+              <button
+                onClick={() => {
+                  onOpenOrders();
+                  setMobileMenuOpen(false);
+                }}
+                className="w-full text-left px-4 py-2.5 text-sm font-bold text-[#DE9344] bg-[#FAF3EB] rounded-lg transition-colors flex items-center justify-between mb-2"
+              >
+                <span className="flex items-center gap-2">
+                  <PackageCheck size={16} />
+                  <span>My Past Orders & Tracking</span>
+                </span>
+                <span className="text-xs text-[#745C51]">View →</span>
+              </button>
               {navItems.map((item, idx) => (
                 <button
                   key={`mobile-${item.id}-${idx}`}

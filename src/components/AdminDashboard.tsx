@@ -239,13 +239,40 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const handleSyncOrders = async () => {
     setSyncingOrders(true);
     try {
+      let successCount = 0;
+      let failureReason = '';
+      for (const ord of orders) {
+        const res = await syncOrderToSupabase(ord);
+        if (res.success) {
+          successCount++;
+        } else if (res.error) {
+          failureReason = res.error;
+        }
+      }
+
       const fresh = await fetchAllOrders();
       setOrders(fresh);
-      onShowToast(`Refreshed and synced ${fresh.length} orders with Supabase!`);
-    } catch {
-      onShowToast('Could not refresh orders.');
+
+      if (failureReason) {
+        onShowToast(`Synced ${successCount}/${orders.length} orders. Supabase note: ${failureReason}`);
+      } else {
+        onShowToast(`Successfully verified & synced ${fresh.length} orders with Supabase!`);
+      }
+    } catch (e: any) {
+      onShowToast(`Sync error: ${e.message || 'Check database connection'}`);
     } finally {
       setTimeout(() => setSyncingOrders(false), 400);
+    }
+  };
+
+  const handlePushSingleOrder = async (order: Order) => {
+    onShowToast(`Pushing order #${order.id} to Supabase...`);
+    const res = await syncOrderToSupabase(order);
+    if (res.success) {
+      onShowToast(`Order #${order.id} successfully recorded in Supabase!`);
+      loadData();
+    } else {
+      onShowToast(`Supabase Sync Notice: ${res.error}`);
     }
   };
 
@@ -710,6 +737,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       </div>
 
                       <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handlePushSingleOrder(order)}
+                          className="px-2 py-1 text-[11px] bg-[#3a1d14] hover:bg-[#4d281c] text-[#DE9344] font-semibold rounded-lg border border-[#522b1e] flex items-center gap-1 transition-colors cursor-pointer"
+                          title="Save this order row to Supabase database"
+                        >
+                          <Database size={11} />
+                          <span>Push to Supabase</span>
+                        </button>
                         <span className="font-bold text-lg text-[#e5972a]">
                           ₱{order.total.toLocaleString()}
                         </span>

@@ -10,6 +10,7 @@ interface AuthModalProps {
   onShowToast: (msg: string) => void;
   initialMode?: 'login' | 'register';
   promptMessage?: string;
+  onOpenOrders?: () => void;
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({
@@ -18,6 +19,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   onShowToast,
   initialMode = 'login',
   promptMessage,
+  onOpenOrders,
 }) => {
   const {
     user,
@@ -453,10 +455,24 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
             {/* Order History */}
             <div className="bg-white/80 p-4 rounded-xl border border-[#f0e5d5]">
-              <h4 className="font-display text-sm font-bold text-[#34170e] flex items-center gap-1.5 mb-3">
-                <Package size={14} className="text-[#DE9344]" />
-                <span>Order History ({orders.length})</span>
-              </h4>
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="font-display text-sm font-bold text-[#34170e] flex items-center gap-1.5">
+                  <Package size={14} className="text-[#DE9344]" />
+                  <span>Order History ({orders.length})</span>
+                </h4>
+                {onOpenOrders && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onClose();
+                      onOpenOrders();
+                    }}
+                    className="text-[11px] font-bold text-[#6a3220] hover:text-[#DE9344] underline cursor-pointer"
+                  >
+                    View All Details →
+                  </button>
+                )}
+              </div>
 
               {loadingOrders ? (
                 <p className="text-xs text-[#7a5a4e] text-center py-4">Loading your orders...</p>
@@ -465,24 +481,39 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   No orders placed yet. Your past bakery orders will appear here.
                 </p>
               ) : (
-                <div className="space-y-2 max-h-48 overflow-y-auto pr-1 divide-y divide-[#f4ede1]">
-                  {orders.map((ord) => (
-                    <div key={ord.id} className="pt-2 text-xs flex items-center justify-between">
-                      <div>
-                        <span className="font-bold text-[#34170e]">#{ord.id}</span>
-                        <p className="text-[11px] text-[#7a5a4e]">
-                          {ord.createdAt ? new Date(ord.createdAt).toLocaleDateString() : 'Recent'} • {ord.deliveryMethod}
-                        </p>
+                <>
+                  <div className="space-y-2 max-h-48 overflow-y-auto pr-1 divide-y divide-[#f4ede1]">
+                    {orders.map((ord) => (
+                      <div key={ord.id} className="pt-2 text-xs flex items-center justify-between">
+                        <div>
+                          <span className="font-bold text-[#34170e]">#{ord.id}</span>
+                          <p className="text-[11px] text-[#7a5a4e]">
+                            {ord.createdAt ? new Date(ord.createdAt).toLocaleDateString() : 'Recent'} • {ord.deliveryMethod}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <span className="font-bold text-[#6a3220]">₱{ord.total.toLocaleString()}</span>
+                          <span className="block text-[10px] text-emerald-700 font-semibold">
+                            {ord.status || 'Confirmed'}
+                          </span>
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <span className="font-bold text-[#6a3220]">₱{ord.total.toLocaleString()}</span>
-                        <span className="block text-[10px] text-emerald-700 font-semibold">
-                          {ord.status || 'Confirmed'}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                  {onOpenOrders && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onClose();
+                        onOpenOrders();
+                      }}
+                      className="w-full mt-3 bg-[#FAF3EB] hover:bg-[#DE9344] hover:text-[#25140C] text-[#6a3220] font-bold text-xs py-2 rounded-lg border border-[#eaddc8] transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
+                    >
+                      <Package size={13} />
+                      <span>Open Detailed Order History & Tracking</span>
+                    </button>
+                  )}
+                </>
               )}
             </div>
           </div>

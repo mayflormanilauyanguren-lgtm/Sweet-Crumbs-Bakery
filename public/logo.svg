@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%">
+  <defs>
+    <linearGradient id="logoBgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2D160E" />
+      <stop offset="100%" stop-color="#140804" />
+    </linearGradient>
+    <linearGradient id="logoGoldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F7C97E" />
+      <stop offset="50%" stop-color="#DE9344" />
+      <stop offset="100%" stop-color="#B86F28" />
+    </linearGradient>
+    <linearGradient id="logoFrostGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFDF9" />
+      <stop offset="100%" stop-color="#F2DEC9" />
+    </linearGradient>
+    <linearGradient id="logoBerryGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E83A42" />
+      <stop offset="100%" stop-color="#9E131A" />
+    </linearGradient>
+    <filter id="logoShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#000000" flood-opacity="0.4" />
+    </filter>
+  </defs>
+
+  <!-- Circular Badge Base -->
+  <circle cx="50" cy="50" r="47" fill="url(#logoBgGrad)" stroke="url(#logoGoldGrad)" stroke-width="2.5" />
+  <circle cx="50" cy="50" r="43" fill="none" stroke="#DE9344" stroke-width="0.8" stroke-dasharray="2,2" opacity="0.6" />
+
+  <!-- Artisan Cake Slice -->
+  <g filter="url(#logoShadow)" transform="translate(0, 2)">
+    <!-- Base Cake Sponge Layer 1 -->
+    <path d="M22 66 L78 66 L72 73 L20 73 Z" fill="#D4904B" />
+    
+    <!-- Cream Filling 1 -->
+    <path d="M22.5 63 L77.5 63 L77 66 L22 66 Z" fill="url(#logoFrostGrad)" />
+    
+    <!-- Cake Sponge Layer 2 -->
+    <path d="M24 56 L76 56 L75.5 63 L22.5 63 Z" fill="#E2A665" />
+    
+    <!-- Cream Filling 2 -->
+    <path d="M24.5 53 L75.5 53 L75 56 L24 56 Z" fill="url(#logoFrostGrad)" />
+    
+    <!-- Top Cake Sponge Layer 3 -->
+    <path d="M26 46 L74 46 L73.5 53 L24.5 53 Z" fill="#E8B478" />
+
+    <!-- Whipped Swirl Top Layer with Scallop Cream -->
+    <path d="M25 46 Q31 43, 37 46 Q43 43, 50 46 Q57 43, 64 46 Q70 43, 75 46 L74 48 Q69 45, 63 48 Q56 45, 49 48 Q42 45, 36 48 Q30 45, 24 48 Z" fill="url(#logoFrostGrad)" />
+
+    <!-- Top Frosting Wave -->
+    <path d="M27 46 C32 40, 42 38, 50 38 C58 38, 68 40, 73 46 Z" fill="url(#logoFrostGrad)" />
+
+    <!-- Strawberry / Cherry on Top -->
+    <path d="M50 28 C45 28, 41 33, 44 40 C47 44, 50 45, 50 45 C50 45, 53 44, 56 40 C59 33, 55 28, 50 28 Z" fill="url(#logoBerryGrad)" />
+    
+    <!-- Strawberry Seed Accents -->
+    <circle cx="47" cy="35" r="0.7" fill="#F7C97E" />
+    <circle cx="51" cy="34" r="0.7" fill="#F7C97E" />
+    <circle cx="49" cy="38" r="0.7" fill="#F7C97E" />
+    <circle cx="53" cy="38" r="0.7" fill="#F7C97E" />
+
+    <!-- Mint Leaves -->
+    <path d="M50 29 C48 24, 42 25, 43 28 C44 31, 48 30, 50 29 Z" fill="#4E8C3B" />
+    <path d="M50 29 C53 25, 57 26, 56 29 C55 31, 52 30, 50 29 Z" fill="#65A651" />
+
+    <!-- Golden Crumb Sparkles -->
+    <circle cx="21" cy="74" r="1.5" fill="url(#logoGoldGrad)" />
+    <circle cx="25" cy="76" r="1" fill="url(#logoGoldGrad)" />
+    <circle cx="76" cy="74" r="1.3" fill="url(#logoGoldGrad)" />
+    <circle cx="81" cy="72" r="0.9" fill="url(#logoGoldGrad)" />
+    <circle cx="78" cy="76" r="1" fill="url(#logoGoldGrad)" />
+
+    <!-- Star Sparkle -->
+    <path d="M28 32 Q30 35, 33 35 Q30 35, 28 38 Q26 35, 23 35 Q26 35, 28 32 Z" fill="#F7C97E" />
+    <path d="M72 30 Q73.5 32, 75 32 Q73.5 32, 72 34 Q70.5 32, 69 32 Q70.5 32, 72 30 Z" fill="#F7C97E" />
+  </g>
+
+  <!-- Sweet Crumbs Subtitle Ribbon / Text Accent -->
+  <text x="50" y="85" text-anchor="middle" font-family="'Playfair Display', Georgia, serif" font-size="7" font-weight="bold" fill="url(#logoGoldGrad)" letter-spacing="1.5">SWEET CRUMBS</text>
+  <text x="50" y="90.5" text-anchor="middle" font-family="'Poppins', sans-serif" font-size="3.5" font-weight="600" fill="#E8D9C5" letter-spacing="2">ARTISAN BAKERY</text>
+</svg>
