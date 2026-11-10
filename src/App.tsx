@@ -13,6 +13,12 @@ import { OrderHistory } from './components/OrderHistory.tsx';
 import { AdminDashboard } from './components/AdminDashboard.tsx';
 import { AdminLogin } from './components/AdminLogin.tsx';
 import { ProductDetailModal } from './components/ProductDetailModal.tsx';
+import { ArtisanDoorEntrance } from './components/motion/ArtisanDoorEntrance.tsx';
+import { Reveal } from './components/motion/Reveal.tsx';
+import { MagneticButton } from './components/motion/MagneticButton.tsx';
+import { FloatingCrumbs } from './components/motion/FloatingCrumbs.tsx';
+import { FlyingCartItem, FlyingItemData } from './components/motion/FlyingCartItem.tsx';
+import { CountUp } from './components/motion/CountUp.tsx';
 import {
   fetchProducts,
   fetchReviews,
@@ -95,6 +101,12 @@ function MainApp() {
   const [isOrderHistoryOpen, setIsOrderHistoryOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [confirmedOrder, setConfirmedOrder] = useState<Order | null>(null);
+
+  // Motion & Micro-interactions state
+  const [flyingItem, setFlyingItem] = useState<FlyingItemData | null>(null);
+  const [cartPulsing, setCartPulsing] = useState(false);
+  const [heroParallax, setHeroParallax] = useState({ x: 0, y: 0 });
+  const [activeTestimonialIdx, setActiveTestimonialIdx] = useState(0);
 
   // Shop filter state
   const [searchQuery, setSearchQuery] = useState('');
@@ -203,7 +215,7 @@ function MainApp() {
     } catch {}
   }, [wishlistIds]);
 
-  // Cart operations
+  // Cart operations with tactile feedback and flying particle arc
   const handleAddToCart = (product: Product, quantityToAdd: number = 1) => {
     const qtyToAdd = Math.max(1, quantityToAdd);
     setCart((prev) => {
@@ -225,6 +237,40 @@ function MainApp() {
       ];
     });
     showToast(`${qtyToAdd > 1 ? `${qtyToAdd} × ` : ''}${product.name} added to cart!`);
+  };
+
+  const handleAddToCartWithCoords = (product: Product, startRect?: DOMRect, quantityToAdd: number = 1) => {
+    handleAddToCart(product, quantityToAdd);
+
+    if (startRect && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      const cartBtn = document.getElementById('nav-cart-btn') || document.querySelector('[aria-label="Shopping Bag"]');
+      if (cartBtn) {
+        const cartRect = cartBtn.getBoundingClientRect();
+        setFlyingItem({
+          id: `${product.id}-${Date.now()}`,
+          img: product.image,
+          startX: startRect.left + startRect.width / 2,
+          startY: startRect.top + startRect.height / 2,
+          endX: cartRect.left + cartRect.width / 2,
+          endY: cartRect.top + cartRect.height / 2,
+        });
+        return;
+      }
+    }
+    setCartPulsing(true);
+    setTimeout(() => setCartPulsing(false), 600);
+  };
+
+  const handleHeroMouseMove = (e: React.MouseEvent<HTMLElement>) => {
+    if (window.matchMedia('(hover: none)').matches) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width - 0.5;
+    const y = (e.clientY - rect.top) / rect.height - 0.5;
+    setHeroParallax({ x: x * 8, y: y * 8 });
+  };
+
+  const handleHeroMouseLeave = () => {
+    setHeroParallax({ x: 0, y: 0 });
   };
 
   const handleUpdateCartQty = (index: number, newQty: number) => {
@@ -509,6 +555,19 @@ function MainApp() {
         </div>
       )}
 
+      {/* Branded Artisan Door Entrance Experience */}
+      <ArtisanDoorEntrance />
+
+      {/* Flying Item to Cart Physics Arc */}
+      <FlyingCartItem
+        item={flyingItem}
+        onLanded={() => {
+          setFlyingItem(null);
+          setCartPulsing(true);
+          setTimeout(() => setCartPulsing(false), 600);
+        }}
+      />
+
       {/* Customer Navbar */}
       <Navbar
         currentPage={currentPage}
@@ -519,6 +578,7 @@ function MainApp() {
         onOpenWishlist={() => setIsWishlistOpen(true)}
         onOpenAuth={() => setIsAuthOpen(true)}
         onOpenOrders={() => setIsOrderHistoryOpen(true)}
+        cartPulsing={cartPulsing}
       />
 
       {/* Main Pages */}
@@ -528,44 +588,51 @@ function MainApp() {
           <div className="page-animate space-y-16 sm:space-y-24 pb-16">
             
             {/* 1. IMMERSIVE HERO ("BAKED FOR YOUR SWEETEST MOMENTS") */}
-            <section className="relative px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto pt-4 sm:pt-8">
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center">
-                
+            <section
+              onMouseMove={handleHeroMouseMove}
+              onMouseLeave={handleHeroMouseLeave}
+              className="relative px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto pt-4 sm:pt-8"
+            >
+              {/* Subtle Atmospheric Golden Crumbs */}
+              <FloatingCrumbs />
+
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center relative z-10">
                 {/* Left: Editorial Statement & CTAs */}
                 <div className="lg:col-span-7 space-y-6 text-left">
-                  {/* Baked Today Badge (Requirement 16) */}
-                  <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FAF3EB] border border-[#DECDBA] text-[#B87326] text-xs font-semibold tracking-wide shadow-2xs">
+                  {/* Baked Today Badge with subtle pulse */}
+                  <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FAF3EB] border border-[#DECDBA] text-[#B87326] text-xs font-semibold tracking-wide shadow-2xs hover:scale-102 transition-transform">
                     <span className="w-2 h-2 rounded-full bg-[#A8181E] animate-pulse" />
                     <span>BAKED TODAY · 5:00 AM OVEN FRESH · DAVAO CITY</span>
                   </div>
 
-                  {/* Oversized Editorial Typography */}
+                  {/* Cinematic Staggered Headline Reveal */}
                   <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl xl:text-[80px] font-bold text-[#20120D] leading-[0.98] tracking-tight">
-                    BAKED<br />
-                    FOR YOUR<br />
-                    <span className="italic font-normal text-[#A8181E]">SWEETEST</span><br />
-                    MOMENTS.
+                    <span className="block hero-line-1">BAKED</span>
+                    <span className="block hero-line-2">FOR YOUR</span>
+                    <span className="block hero-line-3 italic font-normal text-[#A8181E]">SWEETEST</span>
+                    <span className="block hero-line-4">MOMENTS.</span>
                   </h1>
 
-                  <p className="text-sm sm:text-base text-[#6E574C] max-w-lg leading-relaxed">
+                  <p className="text-sm sm:text-base text-[#6E574C] max-w-lg leading-relaxed hero-line-4">
                     Where pure creamery butter, slow-proved brioche dough, and simmered mountain ube meet your morning coffee in Davao City. Every confection tells a story of patience, warmth, and craft.
                   </p>
 
-                  {/* Primary & Secondary Action Pair */}
+                  {/* Primary & Secondary Magnetic Actions */}
                   <div className="flex flex-wrap items-center gap-3.5 pt-2">
-                    <button
+                    <MagneticButton
                       onClick={() => navigateTo('shop')}
-                      className="bg-[#20120D] hover:bg-[#A8181E] text-white font-semibold text-xs sm:text-sm uppercase tracking-wider px-8 py-4 rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer inline-flex items-center gap-2.5"
+                      className="bg-[#20120D] hover:bg-[#A8181E] text-white font-semibold text-xs sm:text-sm uppercase tracking-wider px-8 py-4 rounded-full shadow-md hover:shadow-lg transition-all duration-300 inline-flex items-center gap-2.5 group active:scale-98"
                     >
                       <span>Shop The Collection</span>
-                      <ArrowRight size={15} />
-                    </button>
-                    <button
+                      <ArrowRight size={15} className="group-hover:translate-x-1.5 transition-transform duration-300" />
+                    </MagneticButton>
+
+                    <MagneticButton
                       onClick={() => navigateTo('about')}
-                      className="border border-[#DECDBA] hover:border-[#20120D] bg-white hover:bg-[#FAF6F0] text-[#20120D] font-semibold text-xs sm:text-sm uppercase tracking-wider px-7 py-4 rounded-full transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer shadow-2xs"
+                      className="border border-[#DECDBA] hover:border-[#20120D] bg-white hover:bg-[#FAF6F0] text-[#20120D] font-semibold text-xs sm:text-sm uppercase tracking-wider px-7 py-4 rounded-full transition-all duration-300 shadow-2xs active:scale-98"
                     >
                       Explore Our Story
-                    </button>
+                    </MagneticButton>
                   </div>
 
                   {/* Micro Craft Tags */}
@@ -583,18 +650,24 @@ function MainApp() {
                 {/* Right: Asymmetric Cinematic Showcase with Floating Product */}
                 <div className="lg:col-span-5 relative">
                   <div className="relative mx-auto w-full max-w-md lg:max-w-none">
-                    {/* Architectural Arch Image Container */}
-                    <div className="relative arch-mask-lg overflow-hidden shadow-[0_24px_60px_rgba(32,18,13,0.14)] border-4 border-white bg-white">
+                    {/* Architectural Arch Image Container with Entrance & Organic Floating */}
+                    <div className="relative arch-mask-lg overflow-hidden shadow-[0_24px_60px_rgba(32,18,13,0.14)] border-4 border-white bg-white hero-image-in">
                       <img
                         src="https://images.unsplash.com/photo-1565958011703-44f9829ba187?auto=format&fit=crop&w=1000&q=80"
                         alt="Signature strawberry layer cake fresh from oven"
-                        className="w-full h-[430px] sm:h-[490px] object-cover object-center hover:scale-103 transition-transform duration-700 ease-out"
+                        className="w-full h-[430px] sm:h-[490px] object-cover object-center animate-gentle-float hover:scale-103 transition-transform duration-700 ease-out"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent pointer-events-none" />
                     </div>
 
-                    {/* Floating Product Card (Requirement 3) */}
-                    <div className="absolute -bottom-6 -left-4 sm:-bottom-8 sm:-left-6 bg-white/95 backdrop-blur-md p-4 sm:p-5 rounded-2xl border border-[#DECDBA] shadow-xl flex items-center gap-4 max-w-[290px]">
+                    {/* Floating Product Card with Restrained Mouse Parallax & Tactile Lift */}
+                    <div
+                      style={{
+                        transform: `translate3d(${-heroParallax.x * 0.7}px, ${-heroParallax.y * 0.7}px, 0)`,
+                        transition: 'transform 0.25s cubic-bezier(0.22, 1, 0.36, 1)',
+                      }}
+                      className="absolute -bottom-6 -left-4 sm:-bottom-8 sm:-left-6 bg-white/95 backdrop-blur-md p-4 sm:p-5 rounded-2xl border border-[#DECDBA] shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex items-center gap-4 max-w-[290px] group"
+                    >
                       <button
                         onClick={() => {
                           const prod = products.find((p) => p.name.includes('Strawberry Bliss')) || {
@@ -609,7 +682,7 @@ function MainApp() {
                           };
                           setSelectedProductModal(prod);
                         }}
-                        className="w-13 h-13 rounded-xl overflow-hidden bg-[#FAF6F0] shrink-0 border border-[#EFE6D8] cursor-pointer hover:opacity-90 transition-opacity"
+                        className="w-13 h-13 rounded-xl overflow-hidden bg-[#FAF6F0] shrink-0 border border-[#EFE6D8] cursor-pointer group-hover:scale-105 transition-transform duration-300"
                         title="View reviews and details"
                       >
                         <img
@@ -638,7 +711,7 @@ function MainApp() {
                         <span className="text-[10px] uppercase font-bold text-[#B87326] block tracking-wider">
                           Signature Cake
                         </span>
-                        <h4 className="font-display font-bold text-xs sm:text-sm text-[#20120D] truncate hover:text-[#A8181E] transition-colors">
+                        <h4 className="font-display font-bold text-xs sm:text-sm text-[#20120D] truncate group-hover:text-[#A8181E] transition-colors">
                           Strawberry Bliss
                         </h4>
                         <div className="flex items-center gap-1.5">
@@ -651,7 +724,7 @@ function MainApp() {
                         </div>
                       </div>
                       <button
-                        onClick={() => {
+                        onClick={(e) => {
                           const prod = products.find((p) => p.name.includes('Strawberry Bliss')) || {
                             id: 'classic-cake-2',
                             name: 'Strawberry Bliss Cake',
@@ -662,20 +735,26 @@ function MainApp() {
                             reviewsCount: 38,
                             description: 'Freshly prepared strawberry bliss cake made for Sweet Crumbs Bakery.',
                           };
-                          handleAddToCart(prod);
+                          const rect = e.currentTarget.getBoundingClientRect();
+                          handleAddToCartWithCoords(prod, rect);
                         }}
-                        className="bg-[#20120D] hover:bg-[#A8181E] text-white p-2 rounded-full transition-colors cursor-pointer shadow-xs shrink-0"
+                        className="bg-[#20120D] hover:bg-[#A8181E] text-white p-2.5 rounded-full transition-all duration-300 cursor-pointer shadow-xs hover:scale-110 active:scale-95 shrink-0"
                         title="Add to bag"
                       >
-                        <Plus size={14} />
+                        <Plus size={14} className="stroke-[2.5]" />
                       </button>
                     </div>
 
-                    {/* Floating Circular Artisan Seal */}
-                    <div className="absolute -top-4 -right-4 w-20 h-20 rounded-full bg-[#20120D] text-[#FAF6F0] p-2 flex flex-col items-center justify-center text-center shadow-xl border-2 border-[#DE9344]/40 rotate-12">
-                      <span className="text-[9px] font-bold uppercase tracking-wider text-[#DE9344]">MADE WITH</span>
-                      <span className="font-display text-sm font-bold leading-tight">LOVE</span>
-                      <span className="text-[8px] text-[#C8B8AB]">DAVAO</span>
+                    {/* Interactive Signature Circular Seal with Continuous Slow Rotation */}
+                    <div
+                      className="absolute -top-4 -right-4 w-22 h-22 rounded-full bg-[#20120D] text-[#FAF6F0] p-1.5 flex flex-col items-center justify-center text-center shadow-2xl border-2 border-[#DE9344]/60 animate-slow-spin hover:scale-108 transition-transform duration-300 cursor-pointer group"
+                      title="Handcrafted daily with love in Davao City"
+                    >
+                      <div className="w-full h-full rounded-full border border-dashed border-[#DE9344]/60 flex flex-col items-center justify-center">
+                        <span className="text-[8px] font-bold uppercase tracking-wider text-[#DE9344]">MADE WITH</span>
+                        <span className="font-display text-sm font-bold leading-tight text-white group-hover:text-[#DE9344] transition-colors">LOVE</span>
+                        <span className="text-[7.5px] text-[#C8B8AB] tracking-widest uppercase">DAVAO</span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1814,16 +1893,61 @@ function MainApp() {
                   </h2>
                 </div>
 
-                {/* Big Human Focal Quote */}
-                <div className="max-w-3xl mx-auto bg-white p-8 sm:p-12 rounded-3xl border border-[#DECDBA] shadow-md text-center space-y-4">
-                  <div className="text-lg text-[#DE9344] tracking-widest">★★★★★</div>
-                  <blockquote className="font-display text-xl sm:text-2xl lg:text-3xl font-bold text-[#20120D] leading-snug">
-                    "Honestly one of the best cakes we've ordered in Davao. The cake was breathtaking to look at, but it tasted even better. You can genuinely taste the real butter and slow craft."
-                  </blockquote>
-                  <div className="pt-2 text-xs font-semibold text-[#B87326] tracking-wider uppercase">
-                    — Maria Santos, Davao City
-                  </div>
-                </div>
+                {/* Big Human Focal Quote Carousel (Requirement 31) */}
+                {(() => {
+                  const featuredTestimonials = [
+                    {
+                      quote: "Honestly one of the best cakes we've ordered in Davao. The cake was breathtaking to look at, but it tasted even better. You can genuinely taste the real butter and slow craft.",
+                      author: "Maria Santos",
+                      location: "Davao City",
+                      rating: 5,
+                    },
+                    {
+                      quote: "The heirloom Ube Halaya Cake is completely unmatched. Perfect moisture, natural vibrant color without artificial food coloring, and the whipped frosting is so cloud-like.",
+                      author: "Angelo Del Rosario",
+                      location: "Matina, Davao",
+                      rating: 5,
+                    },
+                    {
+                      quote: "Ordered custom chocolate dream cupcakes for my daughter's celebration. Prompt delivery, elegant gold ribbon box, and each guest kept asking where we bought them!",
+                      author: "Grace Lim",
+                      location: "Lanang, Davao",
+                      rating: 5,
+                    },
+                  ];
+
+                  const currentTestimonial = featuredTestimonials[activeTestimonialIdx] || featuredTestimonials[0];
+
+                  return (
+                    <div className="max-w-3xl mx-auto bg-white p-8 sm:p-12 rounded-3xl border border-[#DECDBA] shadow-md text-center space-y-4 relative overflow-hidden transition-all duration-500 hover:shadow-xl">
+                      <div className="text-lg text-[#DE9344] tracking-widest">
+                        {'★'.repeat(currentTestimonial.rating)}
+                      </div>
+                      <blockquote className="font-display text-xl sm:text-2xl lg:text-3xl font-bold text-[#20120D] leading-snug min-h-[90px] flex items-center justify-center transition-opacity duration-300">
+                        "{currentTestimonial.quote}"
+                      </blockquote>
+                      <div className="pt-2 text-xs font-semibold text-[#B87326] tracking-wider uppercase">
+                        — {currentTestimonial.author}, {currentTestimonial.location}
+                      </div>
+
+                      {/* Carousel Dot Indicators & Controls */}
+                      <div className="flex items-center justify-center gap-2 pt-3">
+                        {featuredTestimonials.map((_, idx) => (
+                          <button
+                            key={idx}
+                            onClick={() => setActiveTestimonialIdx(idx)}
+                            className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${
+                              activeTestimonialIdx === idx
+                                ? 'w-6 bg-[#B81D24]'
+                                : 'w-2 bg-[#DECDBA] hover:bg-[#DE9344]'
+                            }`}
+                            aria-label={`Go to testimonial ${idx + 1}`}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 {/* Live Reviews Feed & Submission */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
@@ -2003,6 +2127,7 @@ function MainApp() {
                     isInWishlist={wishlistIds.includes(p.id)}
                     onToggleWishlist={handleToggleWishlist}
                     onAddToCart={handleAddToCart}
+                    onAddToCartWithCoords={handleAddToCartWithCoords}
                     onSelectProduct={(product) => setSelectedProductModal(product)}
                   />
                 ))}
@@ -2126,6 +2251,37 @@ function MainApp() {
               <p className="text-xs sm:text-sm text-[#745C51] mt-2">
                 Personalize size, flavor, frosting, celebration theme, and piped inscription with live estimation.
               </p>
+            </div>
+
+            {/* Interactive Step Progression Bar (Requirement 29) */}
+            <div className="max-w-xl mx-auto mb-10 px-4">
+              <div className="flex items-center justify-between relative">
+                <div className="absolute top-1/2 left-0 right-0 -translate-y-1/2 h-0.5 bg-[#E8D9C5] z-0" />
+                <div className="flex flex-col items-center relative z-10 bg-transparent">
+                  <div className="w-8 h-8 rounded-full bg-[#25140C] text-white text-xs font-bold flex items-center justify-center shadow-xs border-2 border-white">
+                    1
+                  </div>
+                  <span className="text-[11px] font-semibold text-[#25140C] mt-1 bg-[#FAF6F0] px-1 rounded-sm">Sponge</span>
+                </div>
+                <div className="flex flex-col items-center relative z-10 bg-transparent">
+                  <div className="w-8 h-8 rounded-full bg-[#25140C] text-white text-xs font-bold flex items-center justify-center shadow-xs border-2 border-white">
+                    2
+                  </div>
+                  <span className="text-[11px] font-semibold text-[#25140C] mt-1 bg-[#FAF6F0] px-1 rounded-sm">Diameter</span>
+                </div>
+                <div className="flex flex-col items-center relative z-10 bg-transparent">
+                  <div className="w-8 h-8 rounded-full bg-[#25140C] text-white text-xs font-bold flex items-center justify-center shadow-xs border-2 border-white">
+                    3
+                  </div>
+                  <span className="text-[11px] font-semibold text-[#25140C] mt-1 bg-[#FAF6F0] px-1 rounded-sm">Frosting</span>
+                </div>
+                <div className="flex flex-col items-center relative z-10 bg-transparent">
+                  <div className="w-8 h-8 rounded-full bg-[#DE9344] text-[#25140C] text-xs font-bold flex items-center justify-center shadow-xs border-2 border-white animate-pulse">
+                    4
+                  </div>
+                  <span className="text-[11px] font-bold text-[#B87326] mt-1 bg-[#FAF6F0] px-1 rounded-sm">Dedication</span>
+                </div>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">

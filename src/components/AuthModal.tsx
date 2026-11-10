@@ -184,8 +184,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-[#20120D]/60 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="relative bg-[#fffaf0] rounded-2xl shadow-2xl max-w-lg w-full p-6 sm:p-8 border border-[#f0e3d0] max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-[#20120D]/65 backdrop-blur-md flex items-center justify-center p-4">
+      <div className="relative bg-[#fffaf0] rounded-2xl shadow-2xl max-w-lg w-full p-6 sm:p-8 border border-[#f0e3d0] max-h-[90vh] overflow-y-auto animate-modal-scale">
         <button
           onClick={onClose}
           className="absolute top-4 right-4 p-2 text-[#7a5a4e] hover:text-[#34170e] hover:bg-[#fff2dc] rounded-full transition-colors cursor-pointer"

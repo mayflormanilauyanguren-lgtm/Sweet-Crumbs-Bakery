@@ -1,12 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Product } from '../types.ts';
-import { Heart, Plus, Eye, Star } from 'lucide-react';
+import { Heart, Plus, Eye, Star, Check } from 'lucide-react';
 
 interface ProductCardProps {
   product: Product;
   isInWishlist: boolean;
   onToggleWishlist: (product: Product) => void;
   onAddToCart: (product: Product) => void;
+  onAddToCartWithCoords?: (product: Product, startRect: DOMRect) => void;
   onSelectProduct?: (product: Product) => void;
 }
 
@@ -15,8 +16,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   isInWishlist,
   onToggleWishlist,
   onAddToCart,
+  onAddToCartWithCoords,
   onSelectProduct,
 }) => {
+  const [justAdded, setJustAdded] = useState(false);
   const ratingValue = product.rating || 5;
   const starCount = Math.min(5, Math.max(1, Math.round(ratingValue)));
   const reviewsCount = product.reviewsCount || 12;
@@ -149,13 +152,34 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             type="button"
             onClick={(e) => {
               e.stopPropagation();
-              onAddToCart(product);
+              const rect = e.currentTarget.getBoundingClientRect();
+              setJustAdded(true);
+              setTimeout(() => setJustAdded(false), 1200);
+
+              if (onAddToCartWithCoords) {
+                onAddToCartWithCoords(product, rect);
+              } else {
+                onAddToCart(product);
+              }
             }}
-            className="inline-flex items-center gap-1.5 bg-[#25140C] hover:bg-[#A8181E] text-white text-xs font-semibold px-4 py-2 rounded-full transition-all duration-200 cursor-pointer shadow-sm hover:shadow-md"
+            className={`inline-flex items-center gap-1.5 text-xs font-semibold px-4 py-2 rounded-full transition-all duration-300 cursor-pointer shadow-sm hover:shadow-md active:scale-95 ${
+              justAdded
+                ? 'bg-emerald-700 text-white scale-105'
+                : 'bg-[#25140C] hover:bg-[#A8181E] text-white hover:scale-102'
+            }`}
             title={`Add ${product.name} to bag`}
           >
-            <Plus size={13} className="stroke-[2.5]" />
-            <span>Add to Bag</span>
+            {justAdded ? (
+              <>
+                <Check size={13} className="stroke-[2.5] animate-scale-in" />
+                <span>Added! 🍰</span>
+              </>
+            ) : (
+              <>
+                <Plus size={13} className="stroke-[2.5]" />
+                <span>Add to Bag</span>
+              </>
+            )}
           </button>
         </div>
       </div>

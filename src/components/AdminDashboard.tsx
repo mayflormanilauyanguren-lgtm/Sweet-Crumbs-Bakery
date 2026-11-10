@@ -31,6 +31,7 @@ import {
   setAdminSecretKey,
   DEFAULT_ADMIN_SECRET_KEY,
 } from './AdminLogin.tsx';
+import { CountUp } from './motion/CountUp.tsx';
 import {
   Package,
   ShoppingBag,
@@ -549,39 +550,39 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       {/* Analytics KPI Ribbon */}
       <section className="bg-[#24120d] border-b border-[#3d1e15] px-4 sm:px-8 py-4">
         <div className="max-w-7xl mx-auto grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div className="bg-[#331a12] p-3.5 rounded-xl border border-[#4a261a]">
+          <div className="bg-[#331a12] p-3.5 rounded-xl border border-[#4a261a] transition-all duration-300 hover:border-[#e5972a]/50">
             <span className="text-[11px] text-[#c4ac8f] uppercase tracking-wider block font-medium">
               Total Revenue
             </span>
             <span className="font-display text-xl sm:text-2xl font-bold text-[#e5972a]">
-              ₱{totalRevenue.toLocaleString()}
+              <CountUp end={totalRevenue} prefix="₱" />
             </span>
           </div>
 
-          <div className="bg-[#331a12] p-3.5 rounded-xl border border-[#4a261a]">
+          <div className="bg-[#331a12] p-3.5 rounded-xl border border-[#4a261a] transition-all duration-300 hover:border-white/30">
             <span className="text-[11px] text-[#c4ac8f] uppercase tracking-wider block font-medium">
               Total Orders
             </span>
             <span className="font-display text-xl sm:text-2xl font-bold text-white">
-              {totalOrdersCount}
+              <CountUp end={totalOrdersCount} />
             </span>
           </div>
 
-          <div className="bg-[#331a12] p-3.5 rounded-xl border border-[#4a261a]">
+          <div className="bg-[#331a12] p-3.5 rounded-xl border border-[#4a261a] transition-all duration-300 hover:border-[#d3213a]/50">
             <span className="text-[11px] text-[#c4ac8f] uppercase tracking-wider block font-medium">
               Orders to Prepare
             </span>
             <span className="font-display text-xl sm:text-2xl font-bold text-[#d3213a]">
-              {pendingOrders}
+              <CountUp end={pendingOrders} />
             </span>
           </div>
 
-          <div className="bg-[#331a12] p-3.5 rounded-xl border border-[#4a261a]">
+          <div className="bg-[#331a12] p-3.5 rounded-xl border border-[#4a261a] transition-all duration-300 hover:border-[#ffe9c7]/40">
             <span className="text-[11px] text-[#c4ac8f] uppercase tracking-wider block font-medium">
               Avg Order Value
             </span>
             <span className="font-display text-xl sm:text-2xl font-bold text-[#ffe9c7]">
-              ₱{avgOrderValue.toLocaleString()}
+              <CountUp end={avgOrderValue} prefix="₱" />
             </span>
           </div>
         </div>

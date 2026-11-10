@@ -32,12 +32,12 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
     <div className="fixed inset-0 z-50 overflow-hidden">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-[#25140C]/50 backdrop-blur-xs transition-opacity duration-300"
+        className="fixed inset-0 bg-[#25140C]/60 backdrop-blur-sm transition-opacity duration-300"
         onClick={onClose}
       />
 
       <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
-        <aside className="w-screen max-w-md bg-[#FFFDFB] shadow-2xl flex flex-col z-10 border-l border-[#F0E6D8]">
+        <aside className="w-screen max-w-md bg-[#FFFDFB] shadow-2xl flex flex-col z-10 border-l border-[#F0E6D8] animate-drawer-slide">
           {/* Header */}
           <div className="flex items-center justify-between px-6 py-5 border-b border-[#F0E6D8] bg-white">
             <div className="flex items-center gap-3">

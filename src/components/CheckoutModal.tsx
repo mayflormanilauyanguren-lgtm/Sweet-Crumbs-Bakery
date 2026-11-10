@@ -176,9 +176,9 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       role="dialog"
       aria-modal="true"
       aria-labelledby="checkout-title"
-      className="fixed inset-0 z-50 overflow-y-auto bg-[#1A0E08]/75 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6"
+      className="fixed inset-0 z-50 overflow-y-auto bg-[#1A0E08]/75 backdrop-blur-md flex items-center justify-center p-3 sm:p-6"
     >
-      <div className="relative bg-[#FFFDFB] rounded-3xl shadow-[0_25px_70px_rgba(32,18,13,0.35)] max-w-2xl w-full p-6 sm:p-8 max-h-[92vh] overflow-y-auto border border-[#DECDBA]">
+      <div className="relative bg-[#FFFDFB] rounded-3xl shadow-[0_25px_70px_rgba(32,18,13,0.35)] max-w-2xl w-full p-6 sm:p-8 max-h-[92vh] overflow-y-auto border border-[#DECDBA] animate-modal-scale">
         <button
           onClick={onClose}
           className="absolute top-4 right-4 p-2 text-[#745C51] hover:text-[#25140C] hover:bg-[#FAF3EB] rounded-full transition-colors cursor-pointer"

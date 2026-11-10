@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext.tsx';
 import { ShoppingBag, Heart, User as UserIcon, Menu, X, Sparkles, PackageCheck } from 'lucide-react';
 
@@ -11,6 +11,7 @@ interface NavbarProps {
   onOpenWishlist: () => void;
   onOpenAuth: () => void;
   onOpenOrders: () => void;
+  cartPulsing?: boolean;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -22,9 +23,20 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenWishlist,
   onOpenAuth,
   onOpenOrders,
+  cartPulsing = false,
 }) => {
   const { user, profile } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const navItems = [
     { id: 'home', label: 'Home' },
@@ -46,7 +58,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   return (
     <>
       {/* Editorial Announcement Bar */}
-      <aside aria-label="Announcement" className="bg-[#25140C] text-[#FAF7F2] text-[11px] py-1.5 px-4 text-center border-b border-[#3D2316] relative z-40">
+      <aside aria-label="Announcement" className="bg-[#25140C] text-[#FAF7F2] text-[11px] py-1.5 px-4 text-center border-b border-[#3D2316] relative z-40 transition-colors duration-300">
         <div className="max-w-7xl mx-auto flex items-center justify-center gap-2 font-medium">
           <Sparkles size={12} className="text-[#DE9344]" />
           <span>Freshly baked daily at 5:00 AM in Davao City · Free delivery on orders over ₱1,000</span>
@@ -54,10 +66,20 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
       </aside>
 
-      {/* Main Artisan Header */}
-      <header className="sticky top-0 z-40 bg-[#FFFDFB]/95 backdrop-blur-md border-b border-[#F0E6D8] shadow-[0_2px_16px_rgba(45,26,18,0.04)]">
+      {/* Main Artisan Header - Smooth Scroll Transition */}
+      <header
+        className={`sticky top-0 z-40 backdrop-blur-md border-b transition-all duration-400 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+          isScrolled
+            ? 'bg-[#FFFDFB]/98 border-[#EADCCB] shadow-[0_4px_24px_rgba(45,26,18,0.07)]'
+            : 'bg-[#FFFDFB]/90 border-[#F0E6D8] shadow-[0_2px_16px_rgba(45,26,18,0.03)]'
+        }`}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-20">
+          <div
+            className={`flex items-center justify-between transition-all duration-400 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+              isScrolled ? 'h-16' : 'h-20'
+            }`}
+          >
             {/* Brand Logo & Tagline */}
             <button
               onClick={() => handleLinkClick('home')}
@@ -149,14 +171,17 @@ export const Navbar: React.FC<NavbarProps> = ({
 
               {/* Shopping Bag / Cart */}
               <button
+                id="nav-cart-btn"
                 onClick={onOpenCart}
-                className="relative w-10 h-10 rounded-full bg-[#25140C] hover:bg-[#B81D24] flex items-center justify-center text-white hover:scale-105 active:scale-95 transition-all shadow-sm cursor-pointer"
+                className={`relative w-10 h-10 rounded-full bg-[#25140C] hover:bg-[#B81D24] flex items-center justify-center text-white hover:scale-105 active:scale-95 transition-all shadow-sm cursor-pointer ${
+                  cartPulsing ? 'animate-cart-pulse ring-2 ring-[#DE9344]' : ''
+                }`}
                 title="View Shopping Bag"
                 aria-label="Shopping Bag"
               >
                 <ShoppingBag size={18} />
                 {cartCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-[#B81D24] text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-white animate-pulse">
+                  <span className={`absolute -top-1 -right-1 bg-[#B81D24] text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-white ${cartPulsing ? 'scale-125' : ''} transition-transform`}>
                     {cartCount}
                   </span>
                 )}

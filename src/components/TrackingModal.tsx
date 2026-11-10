@@ -143,9 +143,9 @@ export const TrackingModal: React.FC<TrackingModalProps> = ({ isOpen, onClose, o
       role="dialog"
       aria-modal="true"
       aria-labelledby="tracking-modal-title"
-      className="fixed inset-0 z-50 overflow-y-auto bg-[#1A0E08]/75 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6"
+      className="fixed inset-0 z-50 overflow-y-auto bg-[#1A0E08]/75 backdrop-blur-md flex items-center justify-center p-3 sm:p-6"
     >
-      <div className="relative bg-[#FFFDFB] rounded-3xl shadow-[0_25px_70px_rgba(32,18,13,0.35)] max-w-2xl w-full border border-[#DECDBA] overflow-hidden flex flex-col max-h-[92vh]">
+      <div className="relative bg-[#FFFDFB] rounded-3xl shadow-[0_25px_70px_rgba(32,18,13,0.35)] max-w-2xl w-full border border-[#DECDBA] overflow-hidden flex flex-col max-h-[92vh] animate-modal-scale">
         
         {/* Header Bar */}
         <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-md px-6 py-4 border-b border-[#F0E6D8] flex items-center justify-between">

@@ -249,13 +249,13 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
     >
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-[#1A0E08]/75 backdrop-blur-sm transition-opacity duration-300"
+        className="fixed inset-0 bg-[#1A0E08]/75 backdrop-blur-md transition-opacity duration-300"
         onClick={onClose}
         aria-hidden="true"
       />
 
       {/* Modal Dialog Card */}
-      <div className="relative w-full max-w-4xl bg-white rounded-3xl shadow-[0_25px_70px_rgba(32,18,13,0.35)] border border-[#DECDBA] overflow-hidden z-10 flex flex-col max-h-[92vh] animate-in fade-in zoom-in-95 duration-200">
+      <div className="relative w-full max-w-4xl bg-white rounded-3xl shadow-[0_25px_70px_rgba(32,18,13,0.35)] border border-[#DECDBA] overflow-hidden z-10 flex flex-col max-h-[92vh] animate-modal-scale">
         
         {/* Top Floating Control Bar */}
         <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-md px-6 py-4 border-b border-[#F0E6D8] flex items-center justify-between">
