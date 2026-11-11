@@ -140,7 +140,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         if (res.error) {
           setAuthError(res.error);
         } else {
-          onShowToast('Account registered and stored in database successfully! You are now logged in.');
+          onShowToast('Welcome to Sweet Crumbs! You are now logged in.');
           onClose();
         }
       }
@@ -173,7 +173,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         phone: editPhone.trim(),
         address: editAddress.trim(),
       });
-      onShowToast('Profile updated permanently in database!');
+      onShowToast('Delivery profile updated successfully!');
     } catch {
       onShowToast('Failed to update profile.');
     } finally {
@@ -204,7 +204,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 {authMode === 'login' ? 'Log In to Sweet Crumbs' : 'Create Customer Account'}
               </h2>
               <p className="text-xs text-[#7a5a4e] mt-1">
-                Connected with Supabase Database & Persistent Accounts
+                Access your past bakery orders and saved delivery details
               </p>
               {promptMessage && (
                 <div className="mt-3 p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs font-medium flex items-center gap-2">
@@ -357,10 +357,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 className="w-full bg-[#25140C] hover:bg-[#DE9344] hover:text-[#25140C] disabled:opacity-50 text-white font-bold text-xs py-3.5 rounded-full transition-all cursor-pointer shadow-md mt-3"
               >
                 {submittingAuth
-                  ? 'Saving to Database...'
+                  ? (authMode === 'login' ? 'Logging in...' : 'Creating account...')
                   : authMode === 'login'
                   ? 'Log In'
-                  : 'Register & Store Account'}
+                  : 'Register Account'}
               </button>
             </form>
           </div>

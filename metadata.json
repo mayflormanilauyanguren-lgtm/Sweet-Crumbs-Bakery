@@ -1,6 +1,6 @@
 {
   "name": "Sweet Crumbs Bakery",
-  "description": "Artisan bakery with online ordering, custom cake builder, Supabase database, and admin dashboard for orders and product catalog.",
+  "description": "Artisan bakery with online ordering, custom cake builder, fresh pastries, cakes, and hand-crafted treats in Davao City.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

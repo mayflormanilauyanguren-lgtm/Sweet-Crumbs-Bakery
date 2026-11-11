@@ -19,6 +19,7 @@ async function startServer() {
   const PORT = process.env.PORT || 3000;
 
   app.use(express.json({ limit: '10mb' }));
+  app.use(express.static(path.resolve(__dirname, 'public')));
 
   // ================= API ROUTES =================
 

@@ -90,6 +90,25 @@ export function getTrackingStepFromStatus(status: string): number {
   return 1; // Order Confirmed / Placed
 }
 
+// Helpers for real-time status transitions
+export function isPreparingStatus(status: string, step?: number): boolean {
+  if (step === 2 || step === 3) return true;
+  const s = status.toLowerCase();
+  return s.includes('prepar') || s.includes('oven') || s.includes('baking') || s.includes('kitchen') || s.includes('quality') || s.includes('qa');
+}
+
+export function isOutForDeliveryStatus(status: string, step?: number): boolean {
+  if (step === 4) return true;
+  const s = status.toLowerCase();
+  return (s.includes('deliver') && !s.includes('complete')) || s.includes('pickup') || s.includes('dispatch') || s.includes('courier') || s.includes('out for');
+}
+
+export function isCompletedStatus(status: string, step?: number): boolean {
+  if (step && step >= 5) return true;
+  const s = status.toLowerCase();
+  return s.includes('complete') || s.includes('delivered');
+}
+
 // ---------------- PRODUCTS ----------------
 
 export async function fetchProducts(): Promise<Product[]> {
@@ -260,6 +279,7 @@ export async function syncOrderToSupabase(order: Order): Promise<{ success: bool
     address: (order.address || '').trim(),
     delivery_time_slot: order.deliveryTimeSlot ? String(order.deliveryTimeSlot).trim() : null,
     order_notes: order.orderNotes ? String(order.orderNotes).trim() : null,
+    delivery_notes: order.deliveryNotes ? String(order.deliveryNotes).trim() : (order.orderNotes ? String(order.orderNotes).trim() : null),
     gift_message: order.giftMessage ? String(order.giftMessage).trim() : null,
     payment_method: order.paymentMethod || 'gcash',
     payment_reference: order.paymentReference ? String(order.paymentReference).trim() : null,
@@ -311,6 +331,12 @@ export async function syncOrderToSupabase(order: Order): Promise<{ success: bool
         console.warn(`Supabase orders table is missing column "${missingColumn}". Preserving data in notes & retrying...`);
 
         // Safeguard the data by embedding into order_notes if column isn't in DB yet
+        if (missingColumn === 'delivery_notes' && currentPayload.delivery_notes) {
+          const riderNote = `[Delivery Rider Note: ${currentPayload.delivery_notes}]`;
+          currentPayload.order_notes = currentPayload.order_notes
+            ? `${currentPayload.order_notes} | ${riderNote}`
+            : riderNote;
+        }
         if (missingColumn === 'delivery_time_slot' && currentPayload.delivery_time_slot) {
           const slotNote = `[Slot: ${currentPayload.delivery_time_slot}]`;
           currentPayload.order_notes = currentPayload.order_notes
@@ -386,6 +412,7 @@ export async function fetchAllOrders(): Promise<Order[]> {
           address: d.address || '',
           deliveryTimeSlot: d.delivery_time_slot || undefined,
           orderNotes: d.order_notes || undefined,
+          deliveryNotes: d.delivery_notes || d.order_notes || undefined,
           giftMessage: d.gift_message || undefined,
           paymentMethod: d.payment_method || 'gcash',
           paymentReference: d.payment_reference || undefined,
@@ -462,6 +489,7 @@ export async function fetchOrderById(orderId: string): Promise<Order | null> {
           address: data.address || '',
           deliveryTimeSlot: data.delivery_time_slot || undefined,
           orderNotes: data.order_notes || undefined,
+          deliveryNotes: data.delivery_notes || data.order_notes || undefined,
           giftMessage: data.gift_message || undefined,
           paymentMethod: data.payment_method || 'gcash',
           paymentReference: data.payment_reference || undefined,
@@ -576,12 +604,35 @@ export async function updateOrderStatus(orderId: string, status: string, trackin
 
   const existing = getLocal<Order[]>(LOCAL_ORDERS_KEY, []);
   const idx = existing.findIndex((o) => o.id === orderId);
+  let updatedOrder: Order | null = null;
+  let previousStatus = '';
+  let previousStep: number | undefined;
+
   if (idx > -1) {
+    previousStatus = existing[idx].status;
+    previousStep = existing[idx].trackingStep;
     existing[idx].status = status;
     existing[idx].trackingStep = step;
     existing[idx].updatedAt = now;
+    updatedOrder = existing[idx];
     setLocal(LOCAL_ORDERS_KEY, existing);
   }
+
+  // Dispatch custom event for immediate same-tab listeners
+  if (typeof window !== 'undefined' && updatedOrder) {
+    window.dispatchEvent(
+      new CustomEvent('sc:order_status_updated', {
+        detail: {
+          order: updatedOrder,
+          previousStatus,
+          previousStep,
+          newStatus: status,
+          newStep: step,
+        },
+      })
+    );
+  }
+
   return true;
 }
 
@@ -622,6 +673,7 @@ export function subscribeToOrderUpdates(orderId: string, onUpdate: (order: Order
                 address: d.address,
                 deliveryTimeSlot: d.delivery_time_slot || undefined,
                 orderNotes: d.order_notes || undefined,
+                deliveryNotes: d.delivery_notes || d.order_notes || undefined,
                 giftMessage: d.gift_message || undefined,
                 paymentMethod: d.payment_method,
                 paymentReference: d.payment_reference,
@@ -658,6 +710,114 @@ export function subscribeToOrderUpdates(orderId: string, onUpdate: (order: Order
   return () => {
     isSubscribed = false;
     clearInterval(interval);
+    if (channel && supabase) {
+      try {
+        supabase.removeChannel(channel);
+      } catch {}
+    }
+  };
+}
+
+// Global Real-time Subscription across all orders (Supabase WebSocket + Custom Events + Storage Events + Polling)
+export function subscribeToAllOrdersRealtime(
+  onOrderUpdated: (order: Order, previousStatus?: string, previousStep?: number) => void
+): () => void {
+  let isSubscribed = true;
+  let channel: any = null;
+  const supabase = getSupabase();
+
+  // 1. Supabase Postgres Changes WebSocket
+  if (isSupabaseConfigured()) {
+    try {
+      channel = supabase
+        .channel(`all-orders-feed-${Date.now()}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'orders',
+          },
+          (payload: any) => {
+            if (payload?.new && isSubscribed) {
+              const d = payload.new;
+              const mapped: Order = {
+                id: d.id,
+                customerName: d.customer_name,
+                customerEmail: d.customer_email,
+                customerPhone: d.customer_phone,
+                deliveryMethod: d.delivery_method,
+                address: d.address,
+                deliveryTimeSlot: d.delivery_time_slot || undefined,
+                orderNotes: d.order_notes || undefined,
+                deliveryNotes: d.delivery_notes || d.order_notes || undefined,
+                giftMessage: d.gift_message || undefined,
+                paymentMethod: d.payment_method,
+                paymentReference: d.payment_reference,
+                items: d.items,
+                subtotal: Number(d.subtotal),
+                deliveryFee: Number(d.delivery_fee),
+                discount: Number(d.discount || 0),
+                total: Number(d.total),
+                status: d.status,
+                trackingStep: d.tracking_step != null ? Number(d.tracking_step) : getTrackingStepFromStatus(d.status),
+                createdAt: d.created_at,
+                updatedAt: d.updated_at || d.created_at,
+                userEmail: d.user_email,
+              };
+              onOrderUpdated(mapped);
+            }
+          }
+        )
+        .subscribe();
+    } catch (e) {
+      console.warn('Realtime all orders channel error:', e);
+    }
+  }
+
+  // 2. Custom immediate same-tab event
+  const handleLocalEvent = (e: any) => {
+    if (e.detail?.order && isSubscribed) {
+      onOrderUpdated(e.detail.order, e.detail.previousStatus, e.detail.previousStep);
+    }
+  };
+  if (typeof window !== 'undefined') {
+    window.addEventListener('sc:order_status_updated', handleLocalEvent);
+  }
+
+  // 3. Storage event for cross-tab notification
+  const handleStorage = (e: StorageEvent) => {
+    if (e.key === LOCAL_ORDERS_KEY && e.newValue && isSubscribed) {
+      try {
+        const parsed = JSON.parse(e.newValue);
+        if (Array.isArray(parsed)) {
+          parsed.forEach((ord: Order) => onOrderUpdated(ord));
+        }
+      } catch {}
+    }
+  };
+  if (typeof window !== 'undefined') {
+    window.addEventListener('storage', handleStorage);
+  }
+
+  // 4. Polling fallback every 3.5 seconds
+  const interval = setInterval(async () => {
+    if (!isSubscribed) return;
+    try {
+      const fresh = await fetchAllOrders();
+      if (isSubscribed) {
+        fresh.forEach((ord) => onOrderUpdated(ord));
+      }
+    } catch {}
+  }, 3500);
+
+  return () => {
+    isSubscribed = false;
+    clearInterval(interval);
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('sc:order_status_updated', handleLocalEvent);
+      window.removeEventListener('storage', handleStorage);
+    }
     if (channel && supabase) {
       try {
         supabase.removeChannel(channel);

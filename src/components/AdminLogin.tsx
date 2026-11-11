@@ -68,7 +68,7 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onSuccess, onReturnToSto
             Restricted Admin Portal
           </h1>
           <p className="text-xs text-[#a88a6d]">
-            Enter your secret administrator key to access bakery management and Supabase controls.
+            Enter your secret administrator key to access bakery management and kitchen dispatch.
           </p>
         </div>
 

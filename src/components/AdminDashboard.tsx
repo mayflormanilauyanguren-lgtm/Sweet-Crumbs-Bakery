@@ -59,6 +59,8 @@ import {
   Image as ImageIcon,
   X,
   Upload,
+  Truck,
+  CheckCircle2,
 } from 'lucide-react';
 
 interface AdminDashboardProps {
@@ -284,6 +286,34 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       prev.map((o) => (o.id === orderId ? { ...o, status: newStatus, trackingStep: step ?? o.trackingStep } : o))
     );
     onShowToast(`Order #${orderId} marked as "${newStatus}" and synced to Supabase!`);
+  };
+
+  // Helper to test real-time toast transition alert: Preparing → Out for Delivery / Completed
+  const handleSimulateStatusTransition = async (type: 'out_for_delivery' | 'completed') => {
+    if (orders.length === 0) {
+      onShowToast('No orders found to test. Place an order or click Seed first.');
+      return;
+    }
+    const target = orders[0];
+    const newStatus = type === 'out_for_delivery'
+      ? (target.deliveryMethod === 'delivery' ? 'Out for Delivery' : 'Ready for Pickup')
+      : 'Completed';
+    const newStep = type === 'out_for_delivery' ? 4 : 5;
+
+    // First ensure status was 'Being Prepared' (step 2)
+    await updateOrderStatus(target.id, 'Being Prepared', 2);
+    setOrders((prev) =>
+      prev.map((o) => (o.id === target.id ? { ...o, status: 'Being Prepared', trackingStep: 2 } : o))
+    );
+
+    // Then transition to newStatus to trigger the real-time toast alert
+    setTimeout(async () => {
+      await updateOrderStatus(target.id, newStatus, newStep);
+      setOrders((prev) =>
+        prev.map((o) => (o.id === target.id ? { ...o, status: newStatus, trackingStep: newStep } : o))
+      );
+      onShowToast(`Dispatched transition: "Being Prepared" → "${newStatus}" on #${target.id}!`);
+    }, 200);
   };
 
   const handleDeleteOrder = async (orderId: string) => {
@@ -652,15 +682,37 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 </div>
               </div>
 
-              <button
-                type="button"
-                onClick={handleSyncOrders}
-                disabled={syncingOrders}
-                className="bg-[#381c13] hover:bg-[#4a261a] text-[#ffe9c7] text-xs font-bold px-4 py-2 rounded-xl flex items-center gap-2 border border-[#522b1e] transition-colors cursor-pointer disabled:opacity-50 ml-auto"
-              >
-                <RefreshCw size={13} className={syncingOrders ? 'animate-spin text-[#DE9344]' : 'text-[#DE9344]'} />
-                <span>{syncingOrders ? 'Syncing...' : 'Sync & Refresh Orders'}</span>
-              </button>
+              <div className="flex items-center gap-2 ml-auto flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => handleSimulateStatusTransition('out_for_delivery')}
+                  className="bg-[#1e293b] hover:bg-[#334155] text-sky-200 text-xs font-bold px-3 py-2 rounded-xl flex items-center gap-1.5 border border-sky-700/50 transition-colors cursor-pointer"
+                  title="Simulate Preparing → Out for Delivery alert"
+                >
+                  <Truck size={13} className="text-sky-400" />
+                  <span>Test: Out for Delivery</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleSimulateStatusTransition('completed')}
+                  className="bg-emerald-950 hover:bg-emerald-800 text-emerald-200 text-xs font-bold px-3 py-2 rounded-xl flex items-center gap-1.5 border border-emerald-700/50 transition-colors cursor-pointer"
+                  title="Simulate Preparing → Completed alert"
+                >
+                  <CheckCircle2 size={13} className="text-emerald-400" />
+                  <span>Test: Completed</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleSyncOrders}
+                  disabled={syncingOrders}
+                  className="bg-[#381c13] hover:bg-[#4a261a] text-[#ffe9c7] text-xs font-bold px-4 py-2 rounded-xl flex items-center gap-2 border border-[#522b1e] transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  <RefreshCw size={13} className={syncingOrders ? 'animate-spin text-[#DE9344]' : 'text-[#DE9344]'} />
+                  <span>{syncingOrders ? 'Syncing...' : 'Sync & Refresh Orders'}</span>
+                </button>
+              </div>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
@@ -797,9 +849,20 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       </div>
                     </div>
 
-                    {/* Baker's Notes & Dedication Gift Card if present */}
-                    {(order.giftMessage || order.orderNotes) && (
+                    {/* Delivery Notes, Baker's Notes & Dedication Gift Card if present */}
+                    {(order.giftMessage || order.orderNotes || order.deliveryNotes) && (
                       <div className="bg-[#1b0b07] p-3 rounded-lg border border-[#3d1e15] text-xs space-y-2">
+                        {order.deliveryNotes && (
+                          <div className="space-y-0.5">
+                            <span className="text-[10px] uppercase font-bold text-[#DE9344] flex items-center gap-1.5">
+                              <Truck size={12} className="text-[#DE9344]" />
+                              <span>Order Delivery Notes (Instructions for Delivery Rider):</span>
+                            </span>
+                            <p className="text-white font-medium bg-[#24120d] p-2 rounded border border-[#DE9344]/40">
+                              "{order.deliveryNotes}"
+                            </p>
+                          </div>
+                        )}
                         {order.giftMessage && (
                           <div className="space-y-0.5">
                             <span className="text-[10px] uppercase font-bold text-[#DE9344] flex items-center gap-1">

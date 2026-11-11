@@ -273,6 +273,7 @@ CREATE TABLE IF NOT EXISTS public.orders (
   address text NOT NULL,
   delivery_time_slot text,
   order_notes text,
+  delivery_notes text,
   gift_message text,
   payment_method text NOT NULL,
   payment_reference text,
@@ -291,6 +292,7 @@ CREATE TABLE IF NOT EXISTS public.orders (
 ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS user_email text;
 ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS delivery_time_slot text;
 ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS order_notes text;
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS delivery_notes text;
 ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS gift_message text;
 ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS payment_reference text;
 ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS tracking_step integer DEFAULT 1;

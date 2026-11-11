@@ -17,7 +17,9 @@ import {
   FileText,
   AlertCircle,
   ExternalLink,
+  Printer,
 } from 'lucide-react';
+import { ReceiptModal } from './ReceiptModal.tsx';
 
 interface TrackingModalProps {
   isOpen: boolean;
@@ -28,6 +30,7 @@ interface TrackingModalProps {
 export const TrackingModal: React.FC<TrackingModalProps> = ({ isOpen, onClose, order: initialOrder }) => {
   const [currentOrder, setCurrentOrder] = useState<Order | null>(initialOrder);
   const [searchOrderId, setSearchOrderId] = useState<string>('');
+  const [isReceiptOpen, setIsReceiptOpen] = useState(false);
   const [isSearching, setIsSearching] = useState<boolean>(false);
   const [searchError, setSearchError] = useState<string>('');
   const [lastSyncedTime, setLastSyncedTime] = useState<string>('Just now');
@@ -83,10 +86,10 @@ export const TrackingModal: React.FC<TrackingModalProps> = ({ isOpen, onClose, o
         setCurrentOrder(found);
         setLastSyncedTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
       } else {
-        setSearchError(`Order #${searchOrderId.trim()} could not be found in our database.`);
+        setSearchError(`Order #${searchOrderId.trim()} could not be found. Please check your order reference.`);
       }
     } catch {
-      setSearchError('Error querying database. Please check your order ID.');
+      setSearchError('Error looking up order. Please check your order reference.');
     } finally {
       setIsSearching(false);
     }
@@ -101,7 +104,7 @@ export const TrackingModal: React.FC<TrackingModalProps> = ({ isOpen, onClose, o
     {
       num: 1,
       title: 'Order Confirmed',
-      desc: 'Ticket queued in database & recipe sent to baker',
+      desc: 'Order confirmed & ticket queued for head baker',
       icon: PackageCheck,
       time: '0 min',
     },
@@ -158,9 +161,9 @@ export const TrackingModal: React.FC<TrackingModalProps> = ({ isOpen, onClose, o
                 Real-Time Order Tracking
               </h2>
               <div className="flex items-center gap-2 text-[10px] text-[#9C8578]">
-                <span className="flex items-center gap-1 text-emerald-600 font-semibold">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping inline-block" />
-                  <span>Live Database Sync</span>
+                <span className="flex items-center gap-1.5 text-emerald-600 font-semibold">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse inline-block" />
+                  <span>Live Kitchen Sync</span>
                 </span>
                 <span>•</span>
                 <span>Updated: {lastSyncedTime}</span>
@@ -173,7 +176,7 @@ export const TrackingModal: React.FC<TrackingModalProps> = ({ isOpen, onClose, o
               onClick={handleManualRefresh}
               disabled={isSyncing}
               className="p-2 rounded-full text-[#6E574C] hover:text-[#20120D] hover:bg-[#FAF6F0] transition-colors cursor-pointer"
-              title="Refresh order status from Supabase"
+              title="Refresh live order status"
             >
               <RefreshCw size={16} className={isSyncing ? 'animate-spin text-[#B81D24]' : ''} />
             </button>
@@ -377,8 +380,8 @@ export const TrackingModal: React.FC<TrackingModalProps> = ({ isOpen, onClose, o
 
               </div>
 
-              {/* Gift Card Message & Baker's Notes (if present) */}
-              {(currentOrder.giftMessage || currentOrder.orderNotes) && (
+              {/* Gift Card Message, Delivery Rider Notes & Baker's Notes */}
+              {(currentOrder.giftMessage || currentOrder.deliveryNotes || currentOrder.orderNotes) && (
                 <div className="p-5 rounded-2xl bg-[#FAF3EB] border border-[#DECDBA] space-y-3">
                   {currentOrder.giftMessage && (
                     <div className="space-y-1">
@@ -392,7 +395,19 @@ export const TrackingModal: React.FC<TrackingModalProps> = ({ isOpen, onClose, o
                     </div>
                   )}
 
-                  {currentOrder.orderNotes && (
+                  {currentOrder.deliveryNotes && (
+                    <div className="space-y-1">
+                      <span className="text-[10px] uppercase font-bold tracking-wider text-[#DE9344] flex items-center gap-1">
+                        <Truck size={12} />
+                        <span>Order Delivery Notes (Instructions for Delivery Rider):</span>
+                      </span>
+                      <p className="text-xs text-[#20120D] bg-white p-3 rounded-xl border border-[#DECDBA]">
+                        {currentOrder.deliveryNotes}
+                      </p>
+                    </div>
+                  )}
+
+                  {currentOrder.orderNotes && currentOrder.orderNotes !== currentOrder.deliveryNotes && (
                     <div className="space-y-1 pt-1">
                       <span className="text-[10px] uppercase font-bold tracking-wider text-[#6E574C] block">
                         Special Baker's Instructions
@@ -440,6 +455,16 @@ export const TrackingModal: React.FC<TrackingModalProps> = ({ isOpen, onClose, o
                   </span>
                 </div>
               </div>
+
+              {/* View / Print Receipt Button */}
+              <button
+                type="button"
+                onClick={() => setIsReceiptOpen(true)}
+                className="w-full bg-[#FAF3EB] hover:bg-[#F2DEC9] text-[#20120D] text-xs sm:text-sm font-bold py-3 px-4 rounded-2xl border border-[#DECDBA] transition-all flex items-center justify-center gap-2 cursor-pointer shadow-2xs"
+              >
+                <Printer size={16} className="text-[#DE9344]" />
+                <span>View & Print Sweet Crumbs Receipt</span>
+              </button>
             </>
           ) : (
             <div className="text-center py-12 text-[#9C8578] space-y-2">
@@ -458,6 +483,14 @@ export const TrackingModal: React.FC<TrackingModalProps> = ({ isOpen, onClose, o
         </div>
 
       </div>
+
+      {/* Sweet Crumbs Printable Receipt Modal */}
+      <ReceiptModal
+        order={currentOrder}
+        isOpen={isReceiptOpen}
+        onClose={() => setIsReceiptOpen(false)}
+        onShowToast={() => {}}
+      />
     </div>
   );
 };

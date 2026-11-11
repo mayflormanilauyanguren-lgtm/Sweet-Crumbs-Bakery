@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Order, CartItem } from '../types.ts';
-import { fetchUserOrders } from '../lib/dataService.ts';
+import { fetchUserOrders, getTrackingStepFromStatus } from '../lib/dataService.ts';
 import { useAuth } from '../context/AuthContext.tsx';
 import { isSupabaseConfigured } from '../lib/supabase.ts';
+import { ReceiptModal } from './ReceiptModal.tsx';
 import {
   X,
   ShoppingBag,
@@ -22,7 +23,9 @@ import {
   RotateCcw,
   Gift,
   AlertCircle,
-  Database,
+  Printer,
+  FileText,
+  ChefHat,
 } from 'lucide-react';
 
 interface OrderHistoryProps {
@@ -51,6 +54,7 @@ export const OrderHistory: React.FC<OrderHistoryProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'completed' | 'cancelled'>('all');
   const [expandedOrders, setExpandedOrders] = useState<Record<string, boolean>>({});
+  const [receiptOrder, setReceiptOrder] = useState<Order | null>(null);
 
   const userEmail = (user?.email || profile?.email || '').trim();
 
@@ -68,12 +72,15 @@ export const OrderHistory: React.FC<OrderHistoryProps> = ({
     try {
       const userOrders = await fetchUserOrders(userEmail);
       setOrders(userOrders);
-      // Auto-expand the most recent order
+      // Auto-expand the most recent order on initial load
       if (userOrders.length > 0 && !isManualRefresh) {
-        setExpandedOrders({ [userOrders[0].id]: true });
+        setExpandedOrders((prev) => ({
+          ...prev,
+          [userOrders[0].id]: true,
+        }));
       }
       if (isManualRefresh) {
-        onShowToast(`Refreshed ${userOrders.length} past orders from database.`);
+        onShowToast(`Refreshed ${userOrders.length} past orders.`);
       }
     } catch (err) {
       console.error('Error fetching user order history:', err);
@@ -90,6 +97,22 @@ export const OrderHistory: React.FC<OrderHistoryProps> = ({
     }
   }, [isOpen, userEmail]);
 
+  // Periodic subtle background poll while modal is open to capture live status changes
+  useEffect(() => {
+    if (!isOpen || !userEmail) return;
+
+    const interval = setInterval(async () => {
+      try {
+        const latest = await fetchUserOrders(userEmail);
+        setOrders(latest);
+      } catch {
+        // silent fail for background poll
+      }
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [isOpen, userEmail]);
+
   if (!isOpen) return null;
 
   const toggleExpand = (id: string) => {
@@ -97,6 +120,16 @@ export const OrderHistory: React.FC<OrderHistoryProps> = ({
       ...prev,
       [id]: !prev[id],
     }));
+  };
+
+  // Maps order status to 4-stage fulfillment milestones
+  const getOrderStep = (status: string, trackingStep?: number): number => {
+    const s = status.toLowerCase();
+    if (s.includes('cancel')) return 0;
+    if (s.includes('complete') || s.includes('delivered') || (trackingStep && trackingStep >= 5)) return 4;
+    if (s.includes('deliver') || s.includes('pickup') || s.includes('dispatch') || (trackingStep && trackingStep === 4)) return 3;
+    if (s.includes('oven') || s.includes('prepar') || s.includes('baking') || s.includes('qual') || (trackingStep && (trackingStep === 2 || trackingStep === 3))) return 2;
+    return 1; // Confirmed
   };
 
   // Filtered orders
@@ -190,12 +223,10 @@ export const OrderHistory: React.FC<OrderHistoryProps> = ({
                 <h2 id="order-history-title" className="font-display font-bold text-lg sm:text-xl text-[#20120D] leading-tight">
                   My Past Orders
                 </h2>
-                {isSupabaseConfigured() && (
-                  <span className="hidden sm:inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
-                    <Database size={10} />
-                    <span>Supabase Synced</span>
-                  </span>
-                )}
+                <span className="hidden sm:inline-flex items-center gap-1.5 text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <span>Live Tracking Active</span>
+                </span>
               </div>
               <p className="text-xs text-[#745C51]">
                 {userEmail ? (
@@ -264,9 +295,9 @@ export const OrderHistory: React.FC<OrderHistoryProps> = ({
             <div className="text-center py-16 space-y-3">
               <RefreshCw size={28} className="animate-spin text-[#DE9344] mx-auto" />
               <p className="font-display font-bold text-sm text-[#20120D]">
-                Fetching your artisan bakes from Supabase...
+                Loading your artisan order history...
               </p>
-              <p className="text-xs text-[#745C51]">Connecting to cloud database</p>
+              <p className="text-xs text-[#745C51]">Synchronizing live order status</p>
             </div>
           ) : orders.length === 0 ? (
             /* Empty State */
@@ -347,6 +378,36 @@ export const OrderHistory: React.FC<OrderHistoryProps> = ({
                     const badge = getStatusBadge(order.status);
                     const isExpanded = !!expandedOrders[order.id];
                     const itemCount = order.items.reduce((sum, it) => sum + (it.qty || 1), 0);
+                    const isCancelled = order.status.toLowerCase().includes('cancel');
+                    const activeStep = getOrderStep(order.status, order.trackingStep);
+                    const isDelivery = order.deliveryMethod === 'delivery';
+
+                    const trackerSteps = [
+                      {
+                        step: 1,
+                        title: 'Confirmed',
+                        subtitle: 'Order Accepted',
+                        icon: PackageCheck,
+                      },
+                      {
+                        step: 2,
+                        title: 'Preparing',
+                        subtitle: 'Baking in Oven',
+                        icon: ChefHat,
+                      },
+                      {
+                        step: 3,
+                        title: isDelivery ? 'Out for Delivery' : 'Ready for Pickup',
+                        subtitle: isDelivery ? 'Courier En Route' : 'At Bakehouse',
+                        icon: isDelivery ? Truck : ShoppingBag,
+                      },
+                      {
+                        step: 4,
+                        title: 'Completed',
+                        subtitle: isDelivery ? 'Delivered' : 'Collected',
+                        icon: CheckCircle2,
+                      },
+                    ];
 
                     return (
                       <div
@@ -363,12 +424,14 @@ export const OrderHistory: React.FC<OrderHistoryProps> = ({
                               #{order.id.slice(-4)}
                             </div>
                             <div>
-                              <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-2 flex-wrap">
                                 <span className="font-display font-bold text-base text-[#20120D]">
                                   Order #{order.id}
                                 </span>
+                                {/* Status badge with smooth fade-in and scale-up transition animation */}
                                 <span
-                                  className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${badge.bg}`}
+                                  key={`${order.id}-${order.status}`}
+                                  className={`inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[11px] font-bold border transition-all duration-300 animate-status-change ${badge.bg}`}
                                 >
                                   <span className={`w-1.5 h-1.5 rounded-full ${badge.dot}`} />
                                   <span>{badge.label}</span>
@@ -387,15 +450,110 @@ export const OrderHistory: React.FC<OrderHistoryProps> = ({
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-3 ml-auto">
+                          <div className="flex items-center gap-2.5 ml-auto">
+                            {/* Receipt / Invoice Quick Action Button */}
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setReceiptOrder(order);
+                              }}
+                              className="px-3 py-1.5 rounded-xl bg-[#FAF3EB] hover:bg-[#F2DEC9] border border-[#DECDBA] text-xs font-semibold text-[#20120D] transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                              title="Print or Download Receipt"
+                            >
+                              <Printer size={13} className="text-[#DE9344]" />
+                              <span className="hidden sm:inline">Receipt</span>
+                            </button>
+
                             <span className="font-display font-bold text-lg text-[#20120D]">
                               ₱{order.total.toLocaleString()}
                             </span>
+
                             <div className="p-1 rounded-full bg-[#FAF3EB] text-[#745C51]">
                               {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                             </div>
                           </div>
                         </div>
+
+                        {/* Visual Progress Tracker */}
+                        {!isCancelled ? (
+                          <div className="px-4 py-3 sm:px-5 sm:py-4 bg-[#FAF7F2] border-t border-b border-[#F0E6D8]">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-[11px] uppercase tracking-wider font-bold text-[#6E574C] flex items-center gap-1.5">
+                                <Sparkles size={12} className="text-[#DE9344]" />
+                                <span>Order Fulfillment Tracker</span>
+                              </span>
+                              <span className="text-xs font-semibold text-[#DE9344]">
+                                {activeStep >= 4 ? 'Order Completed 🎉' : `Active: ${trackerSteps[activeStep - 1]?.title || 'Processing'}`}
+                              </span>
+                            </div>
+
+                            {/* Stepper with connecting line */}
+                            <div className="relative pt-2 pb-1">
+                              {/* Horizontal track line for desktop */}
+                              <div className="absolute top-6.5 left-8 right-8 h-1 bg-[#E8D9C5] rounded-full z-0 hidden sm:block">
+                                <div
+                                  className="h-full bg-gradient-to-r from-[#20120D] to-[#DE9344] rounded-full transition-all duration-500"
+                                  style={{
+                                    width: `${((Math.max(1, activeStep) - 1) / 3) * 100}%`,
+                                  }}
+                                />
+                              </div>
+
+                              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 relative z-10">
+                                {trackerSteps.map((st) => {
+                                  const isDone = activeStep > st.step;
+                                  const isActive = activeStep === st.step;
+                                  const Icon = st.icon;
+
+                                  return (
+                                    <div
+                                      key={st.step}
+                                      className={`flex flex-col items-center text-center p-2 rounded-xl transition-all ${
+                                        isActive ? 'bg-white shadow-xs border border-[#DECDBA]' : ''
+                                      }`}
+                                    >
+                                      {/* Step circle with subtle pulse animation for active status */}
+                                      <div
+                                        className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold transition-all mb-1.5 ${
+                                          isDone
+                                            ? 'bg-[#20120D] text-white shadow-xs'
+                                            : isActive
+                                            ? 'bg-[#DE9344] text-white animate-status-pulse ring-4 ring-[#DE9344]/25 shadow-md'
+                                            : 'bg-[#EFE6D8] text-[#9C8578] border border-[#DECDBA]'
+                                        }`}
+                                      >
+                                        {isDone ? <CheckCircle2 size={16} /> : <Icon size={16} />}
+                                      </div>
+
+                                      {/* Status label with smooth transition animation */}
+                                      <span
+                                        key={`${order.id}-${st.step}-${isActive}`}
+                                        className={`text-xs leading-tight ${
+                                          isActive
+                                            ? 'font-bold text-[#20120D] animate-status-change'
+                                            : isDone
+                                            ? 'font-semibold text-[#20120D]'
+                                            : 'text-[#9C8578]'
+                                        }`}
+                                      >
+                                        {st.title}
+                                      </span>
+                                      <span className="text-[10px] text-[#745C51] hidden sm:block mt-0.5">
+                                        {st.subtitle}
+                                      </span>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="px-4 py-2.5 sm:px-5 bg-rose-50 border-t border-b border-rose-200 text-xs text-rose-800 flex items-center gap-2">
+                            <AlertCircle size={14} className="text-rose-600 shrink-0" />
+                            <span>This order was cancelled. Please contact bakery dispatch if you have questions.</span>
+                          </div>
+                        )}
 
                         {/* Collapsible Details Panel */}
                         {isExpanded && (
@@ -450,8 +608,8 @@ export const OrderHistory: React.FC<OrderHistoryProps> = ({
                               </div>
                             </div>
 
-                            {/* Gift Dedication Message / Order Notes */}
-                            {(order.giftMessage || order.orderNotes) && (
+                            {/* Gift Dedication Message / Order Delivery Notes / Baker Notes */}
+                            {(order.giftMessage || order.deliveryNotes || order.orderNotes) && (
                               <div className="p-3.5 rounded-xl bg-[#FAF0E4] border border-[#DECDBA] text-xs space-y-2">
                                 {order.giftMessage && (
                                   <div>
@@ -464,7 +622,16 @@ export const OrderHistory: React.FC<OrderHistoryProps> = ({
                                     </p>
                                   </div>
                                 )}
-                                {order.orderNotes && (
+                                {order.deliveryNotes && (
+                                  <div>
+                                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#DE9344] flex items-center gap-1">
+                                      <Truck size={11} />
+                                      <span>Order Delivery Notes (Instructions for Delivery Rider):</span>
+                                    </span>
+                                    <p className="text-[#20120D] mt-0.5 font-medium">{order.deliveryNotes}</p>
+                                  </div>
+                                )}
+                                {order.orderNotes && order.orderNotes !== order.deliveryNotes && (
                                   <div>
                                     <span className="text-[10px] font-bold uppercase tracking-wider text-[#9C8578]">
                                       Baker's Kitchen Notes:
@@ -537,17 +704,28 @@ export const OrderHistory: React.FC<OrderHistoryProps> = ({
 
                             {/* Action Buttons */}
                             <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  onClose();
-                                  onOpenTracking(order);
-                                }}
-                                className="bg-[#20120D] hover:bg-[#3D2316] text-[#FAF7F2] text-xs font-bold px-5 py-2.5 rounded-xl transition-all cursor-pointer flex items-center gap-2 shadow-xs"
-                              >
-                                <PackageCheck size={14} className="text-[#DE9344]" />
-                                <span>Track Live Delivery Status</span>
-                              </button>
+                              <div className="flex flex-wrap items-center gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    onClose();
+                                    onOpenTracking(order);
+                                  }}
+                                  className="bg-[#20120D] hover:bg-[#3D2316] text-[#FAF7F2] text-xs font-bold px-4 py-2.5 rounded-xl transition-all cursor-pointer flex items-center gap-2 shadow-xs"
+                                >
+                                  <PackageCheck size={14} className="text-[#DE9344]" />
+                                  <span>Track Live Delivery Status</span>
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => setReceiptOrder(order)}
+                                  className="bg-white hover:bg-[#FAF3EB] text-[#20120D] text-xs font-bold px-4 py-2.5 rounded-xl border border-[#DECDBA] transition-all cursor-pointer flex items-center gap-1.5 shadow-2xs"
+                                >
+                                  <Printer size={13} className="text-[#DE9344]" />
+                                  <span>Print / Download Receipt</span>
+                                </button>
+                              </div>
 
                               <button
                                 type="button"
@@ -584,6 +762,14 @@ export const OrderHistory: React.FC<OrderHistoryProps> = ({
           </button>
         </div>
       </div>
+
+      {/* Printable & Downloadable Sweet Crumbs Receipt Modal */}
+      <ReceiptModal
+        order={receiptOrder}
+        isOpen={!!receiptOrder}
+        onClose={() => setReceiptOrder(null)}
+        onShowToast={onShowToast}
+      />
     </div>
   );
 };

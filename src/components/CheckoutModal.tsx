@@ -13,6 +13,7 @@ import {
   FileText,
   Zap,
   ShoppingBag,
+  Truck,
 } from 'lucide-react';
 
 interface CheckoutModalProps {
@@ -46,6 +47,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const [deliveryMethod, setDeliveryMethod] = useState<'delivery' | 'pickup'>('delivery');
   const [deliveryTimeSlot, setDeliveryTimeSlot] = useState('Express ASAP (Next available bake batch: ~45 mins)');
   const [address, setAddress] = useState('');
+  const [deliveryNotes, setDeliveryNotes] = useState('');
   const [orderNotes, setOrderNotes] = useState('');
   const [hasGiftCard, setHasGiftCard] = useState(false);
   const [giftMessage, setGiftMessage] = useState('');
@@ -125,6 +127,13 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     setIsSubmitting(true);
     const orderId = 'SC-' + Math.floor(1000 + Math.random() * 9000);
 
+    const trimmedDeliveryNotes = deliveryNotes.trim();
+    const trimmedOrderNotes = orderNotes.trim();
+    const combinedNotes = [
+      trimmedDeliveryNotes ? `Rider Note: ${trimmedDeliveryNotes}` : '',
+      trimmedOrderNotes ? `Baker Note: ${trimmedOrderNotes}` : '',
+    ].filter(Boolean).join(' | ');
+
     const orderPayload: Order = {
       id: orderId,
       userEmail: user?.email || email.trim(),
@@ -134,7 +143,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       deliveryMethod,
       address: deliveryMethod === 'delivery' ? address.trim() : 'Sweet Crumbs Bakery Store Pickup (Davao City)',
       deliveryTimeSlot: deliveryTimeSlot.trim(),
-      orderNotes: orderNotes.trim() || undefined,
+      deliveryNotes: trimmedDeliveryNotes || undefined,
+      orderNotes: combinedNotes || trimmedDeliveryNotes || trimmedOrderNotes || undefined,
       giftMessage: hasGiftCard && giftMessage.trim() ? giftMessage.trim() : undefined,
       paymentMethod,
       paymentReference: paymentReference.trim() || null,
@@ -363,11 +373,51 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                 {errors.address && (
                   <p className="text-xs text-[#c0392b] mt-1">{errors.address}</p>
                 )}
+
+                {/* Order Delivery Notes for Rider */}
+                <div className="pt-2">
+                  <label className="block text-xs font-semibold text-[#25140C] mb-1 flex items-center justify-between">
+                    <span className="flex items-center gap-1.5">
+                      <Truck size={13} className="text-[#DE9344]" />
+                      <span>Order Delivery Notes (Instructions for Delivery Rider)</span>
+                    </span>
+                    <span className="text-[10px] text-[#745C51] font-normal">Optional</span>
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={deliveryNotes}
+                    onChange={(e) => setDeliveryNotes(e.target.value)}
+                    placeholder="e.g. Landmark: Green gate beside sari-sari store. Gate code #4012. Please ring bell or call upon arrival..."
+                    className="w-full text-xs px-3.5 py-2.5 rounded-xl border border-[#DECDBA] bg-[#FAF6F0] focus:border-[#A8181E] focus:outline-hidden text-[#20120D] placeholder-[#9C8578]"
+                  />
+                  <p className="text-[10px] text-[#745C51] mt-0.5">
+                    Your delivery rider will receive these exact instructions upon dispatch.
+                  </p>
+                </div>
               </div>
             ) : (
-              <div className="bg-[#FAF3EB] p-3.5 rounded-xl border border-[#DECDBA] text-xs text-[#20120D]">
-                <p className="font-bold">Sweet Crumbs Davao Bakehouse Pickup Counter</p>
-                <p className="text-[#6E574C]">Davao City, Philippines · Mon–Sat: 8:00 AM – 8:00 PM</p>
+              <div className="space-y-3">
+                <div className="bg-[#FAF3EB] p-3.5 rounded-xl border border-[#DECDBA] text-xs text-[#20120D]">
+                  <p className="font-bold">Sweet Crumbs Davao Bakehouse Pickup Counter</p>
+                  <p className="text-[#6E574C]">Davao City, Philippines · Mon–Sat: 8:00 AM – 8:00 PM</p>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-[#25140C] mb-1 flex items-center justify-between">
+                    <span className="flex items-center gap-1.5">
+                      <ShoppingBag size={13} className="text-[#DE9344]" />
+                      <span>Order Delivery Notes / Store Pickup Instructions</span>
+                    </span>
+                    <span className="text-[10px] text-[#745C51] font-normal">Optional</span>
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={deliveryNotes}
+                    onChange={(e) => setDeliveryNotes(e.target.value)}
+                    placeholder="e.g. Someone else will pick up for me (Name: Maria Santos), packaging requests..."
+                    className="w-full text-xs px-3.5 py-2.5 rounded-xl border border-[#DECDBA] bg-[#FAF6F0] focus:border-[#A8181E] focus:outline-hidden text-[#20120D] placeholder-[#9C8578]"
+                  />
+                </div>
               </div>
             )}
           </section>
@@ -598,7 +648,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
             className="w-full bg-[#20120D] hover:bg-[#A8181E] disabled:opacity-50 text-white font-semibold py-4 rounded-full shadow-lg transition-all duration-200 text-xs sm:text-sm uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer hover:-translate-y-0.5 active:translate-y-0"
           >
             {isInstantMode ? <Zap size={16} /> : <ShoppingBag size={16} />}
-            <span>{isSubmitting ? 'Recording Order in Database...' : (isInstantMode ? `Place Instant Order — ₱${total.toLocaleString()}` : `Place Order — ₱${total.toLocaleString()}`)}</span>
+            <span>{isSubmitting ? 'Placing Order...' : (isInstantMode ? `Place Instant Order — ₱${total.toLocaleString()}` : `Place Order — ₱${total.toLocaleString()}`)}</span>
           </button>
         </form>
       </div>

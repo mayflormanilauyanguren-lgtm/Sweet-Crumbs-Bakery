@@ -13,6 +13,10 @@ import { OrderHistory } from './components/OrderHistory.tsx';
 import { AdminDashboard } from './components/AdminDashboard.tsx';
 import { AdminLogin } from './components/AdminLogin.tsx';
 import { ProductDetailModal } from './components/ProductDetailModal.tsx';
+import { RealtimeOrderToast } from './components/RealtimeOrderToast.tsx';
+import { ReceiptModal } from './components/ReceiptModal.tsx';
+import { RealtimeOrderAlert } from './types.ts';
+import { playOrderStatusChime } from './lib/audio.ts';
 import { ArtisanDoorEntrance } from './components/motion/ArtisanDoorEntrance.tsx';
 import { Reveal } from './components/motion/Reveal.tsx';
 import { MagneticButton } from './components/motion/MagneticButton.tsx';
@@ -24,6 +28,11 @@ import {
   fetchReviews,
   createReview,
   createContactMessage,
+  isPreparingStatus,
+  isOutForDeliveryStatus,
+  isCompletedStatus,
+  subscribeToAllOrdersRealtime,
+  fetchAllOrders,
 } from './lib/dataService.ts';
 import {
   Sparkles,
@@ -144,6 +153,121 @@ function MainApp() {
       setToastMessage(null);
     }, 3200);
   };
+
+  // Real-Time Order Toast Notifications System
+  const [orderAlerts, setOrderAlerts] = useState<RealtimeOrderAlert[]>([]);
+  const [receiptModalOrder, setReceiptModalOrder] = useState<Order | null>(null);
+  const knownOrderStatusesRef = React.useRef<Record<string, { status: string; step?: number }>>({});
+  const isOrdersInitializedRef = React.useRef(false);
+
+  // Monitor all real-time order status updates for status transitions
+  useEffect(() => {
+    // 1. Initial snapshot of all existing orders
+    fetchAllOrders()
+      .then((all) => {
+        all.forEach((ord) => {
+          knownOrderStatusesRef.current[ord.id] = {
+            status: ord.status,
+            step: ord.trackingStep,
+          };
+        });
+        isOrdersInitializedRef.current = true;
+      })
+      .catch(() => {
+        isOrdersInitializedRef.current = true;
+      });
+
+    // Helper to determine if an updated order belongs to the user/session
+    const isOrderRelevant = (order: Order): boolean => {
+      const email = (user?.email || profile?.email || '').trim().toLowerCase();
+      if (
+        email &&
+        (order.customerEmail?.toLowerCase() === email ||
+          order.userEmail?.toLowerCase() === email)
+      ) {
+        return true;
+      }
+      if (confirmedOrder && confirmedOrder.id === order.id) {
+        return true;
+      }
+      try {
+        const localSaved = localStorage.getItem('sc_orders');
+        if (localSaved) {
+          const parsed: Order[] = JSON.parse(localSaved);
+          if (parsed.some((o) => o.id === order.id)) return true;
+        }
+      } catch {}
+      return false;
+    };
+
+    // 2. Real-time subscription across Supabase WebSockets + Local events + Storage + Polling
+    const unsubscribe = subscribeToAllOrdersRealtime(
+      (updatedOrder, explicitPrevStatus, explicitPrevStep) => {
+        if (!isOrderRelevant(updatedOrder)) {
+          return;
+        }
+
+        const prevInfo = knownOrderStatusesRef.current[updatedOrder.id];
+        const prevStatus = explicitPrevStatus || prevInfo?.status || '';
+        const prevStep = explicitPrevStep ?? prevInfo?.step;
+
+        const currentStatus = updatedOrder.status;
+        const currentStep = updatedOrder.trackingStep;
+
+        // Update known status record
+        knownOrderStatusesRef.current[updatedOrder.id] = {
+          status: currentStatus,
+          step: currentStep,
+        };
+
+        // Skip during initial load before snapshot is complete
+        if (!isOrdersInitializedRef.current && !explicitPrevStatus) {
+          return;
+        }
+
+        // Skip if status did not actually change
+        if (
+          prevStatus &&
+          prevStatus.toLowerCase() === currentStatus.toLowerCase() &&
+          prevStep === currentStep
+        ) {
+          return;
+        }
+
+        // Requirement: Alert when order status updates from 'Preparing' to 'Out for Delivery' or 'Completed'
+        const wasPreparing = isPreparingStatus(prevStatus, prevStep);
+        const nowOutForDelivery = isOutForDeliveryStatus(currentStatus, currentStep);
+        const nowCompleted = isCompletedStatus(currentStatus, currentStep);
+
+        if (wasPreparing && (nowOutForDelivery || nowCompleted)) {
+          const alertType: 'out_for_delivery' | 'completed' = nowOutForDelivery
+            ? 'out_for_delivery'
+            : 'completed';
+
+          // Play tactile audio chime
+          playOrderStatusChime(alertType);
+
+          const newAlert: RealtimeOrderAlert = {
+            id: `alert-${updatedOrder.id}-${Date.now()}`,
+            order: updatedOrder,
+            type: alertType,
+            previousStatus: prevStatus,
+            newStatus: currentStatus,
+            timestamp: Date.now(),
+          };
+
+          setOrderAlerts((prev) => [
+            newAlert,
+            ...prev.filter((a) => a.order.id !== updatedOrder.id).slice(0, 2),
+          ]);
+        }
+      }
+    );
+
+    return () => {
+      unsubscribe();
+    };
+  }, [user, profile, confirmedOrder]);
 
   // Sync hash changes and secret keyboard shortcuts for Admin Portal
   useEffect(() => {
@@ -530,24 +654,61 @@ function MainApp() {
     }
 
     return (
-      <AdminDashboard
-        onClose={() => navigateTo('home')}
-        onSignOut={() => {
-          sessionStorage.removeItem('sc_admin_authenticated');
-          setIsAdminAuthenticated(false);
-          navigateTo('home');
-          showToast('Signed out from Admin Dashboard.');
-        }}
-        onShowToast={showToast}
-        onProductsUpdated={loadInitialData}
-      />
+      <>
+        <RealtimeOrderToast
+          alerts={orderAlerts}
+          onDismiss={(alertId) => setOrderAlerts((prev) => prev.filter((a) => a.id !== alertId))}
+          onTrackOrder={(order) => {
+            setConfirmedOrder(order);
+            setIsTrackingOpen(true);
+          }}
+          onViewReceipt={(order) => {
+            setReceiptModalOrder(order);
+          }}
+        />
+        <AdminDashboard
+          onClose={() => navigateTo('home')}
+          onSignOut={() => {
+            sessionStorage.removeItem('sc_admin_authenticated');
+            setIsAdminAuthenticated(false);
+            navigateTo('home');
+            showToast('Signed out from Admin Dashboard.');
+          }}
+          onShowToast={showToast}
+          onProductsUpdated={loadInitialData}
+        />
+        <ReceiptModal
+          order={receiptModalOrder}
+          isOpen={!!receiptModalOrder}
+          onClose={() => setReceiptModalOrder(null)}
+          onShowToast={showToast}
+        />
+        <TrackingModal
+          isOpen={isTrackingOpen}
+          onClose={() => setIsTrackingOpen(false)}
+          order={confirmedOrder}
+        />
+      </>
     );
   }
 
   // ================= CUSTOMER STOREFRONT =================
   return (
     <div className="min-h-screen flex flex-col bg-[#FAF7F2] text-[#2D1A12]">
-      {/* Toast Notification */}
+      {/* Real-time Order Status Toast Notification System */}
+      <RealtimeOrderToast
+        alerts={orderAlerts}
+        onDismiss={(alertId) => setOrderAlerts((prev) => prev.filter((a) => a.id !== alertId))}
+        onTrackOrder={(order) => {
+          setConfirmedOrder(order);
+          setIsTrackingOpen(true);
+        }}
+        onViewReceipt={(order) => {
+          setReceiptModalOrder(order);
+        }}
+      />
+
+      {/* General Toast Notification */}
       {toastMessage && (
         <div className="fixed top-24 right-6 z-50 bg-[#25140C] text-[#FAF7F2] px-5 py-3 rounded-xl shadow-2xl text-xs sm:text-sm font-medium border border-[#DE9344]/30 flex items-center gap-2.5 animate-bounce">
           <span className="text-base">🍰</span>
@@ -2101,8 +2262,9 @@ function MainApp() {
 
             {/* Products Grid */}
             {loadingProducts ? (
-              <div className="text-center py-24 text-[#745C51] bg-white rounded-2xl border border-[#F0E6D8]">
-                Loading products from Supabase...
+              <div className="text-center py-24 text-[#745C51] bg-white rounded-2xl border border-[#F0E6D8] space-y-2">
+                <RefreshCw size={24} className="animate-spin text-[#DE9344] mx-auto" />
+                <p className="font-display font-medium text-sm text-[#20120D]">Loading fresh artisan bakes...</p>
               </div>
             ) : sortedProducts.length === 0 ? (
               <div className="text-center py-20 bg-white rounded-2xl border border-[#F0E6D8] p-8">
@@ -2897,6 +3059,14 @@ function MainApp() {
           setIsOrderHistoryOpen(false);
           setIsAuthOpen(true);
         }}
+        onShowToast={showToast}
+      />
+
+      {/* Standalone Receipt Modal for direct Realtime Alert actions */}
+      <ReceiptModal
+        order={receiptModalOrder}
+        isOpen={!!receiptModalOrder}
+        onClose={() => setReceiptModalOrder(null)}
         onShowToast={showToast}
       />
 

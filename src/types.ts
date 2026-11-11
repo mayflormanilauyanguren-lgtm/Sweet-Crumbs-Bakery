@@ -31,6 +31,7 @@ export interface Order {
   address: string;
   deliveryTimeSlot?: string;
   orderNotes?: string;
+  deliveryNotes?: string;
   giftMessage?: string;
   paymentMethod: string;
   paymentReference?: string | null;
@@ -43,6 +44,15 @@ export interface Order {
   trackingStep?: number;
   createdAt: string;
   updatedAt?: string;
+}
+
+export interface RealtimeOrderAlert {
+  id: string;
+  order: Order;
+  type: 'out_for_delivery' | 'completed';
+  previousStatus: string;
+  newStatus: string;
+  timestamp: number;
 }
 
 export interface Review {
